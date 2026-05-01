@@ -38,7 +38,7 @@
     "ballistica_web": {
         "discord_link": "",
         "enable": true,
-        "server_password": "theriyathu"
+        "server_password": "python"
     },
     "character_chooser": {
         "enable": true
