@@ -1795,8 +1795,9 @@ async def get_stats_embed():
     )
     
     # Top 5 players (you'll need to implement this for API 9)
-    top5_names = ["Player1", "Player2", "Player3", "Player4", "Player5"]  # Replace with actual top players
-    embed.add_field(name="TOP 5 PLAYERS", value=f"1.{mystats.top5Name[0]}\n2.{mystats.top5Name[1]}\n3.{mystats.top5Name[2]}\n4.{mystats.top5Name[3]}\n5.{mystats.top5Name[4]}", inline=False)    
+    top5_names = ["Player1", "Player2", "Player3", "Player4", "Player5"]
+    top5 = mystats.top5Name + ["N/A"] * 5  # Replace with actual top players
+    embed.add_field(name="TOP 5 PLAYERS", value=f"1.{top5[0]}\n2.{top5[1]}\n3.{top5[2]}\n4.{top5[3]}\n5.{top5[4]}", inline=False)    
     embed.set_footer(
         text="Auto updates every 10 seconds!", 
         icon_url='https://cdn.discordapp.com/emojis/842886491533213717.gif?size=96&quality=lossless'
