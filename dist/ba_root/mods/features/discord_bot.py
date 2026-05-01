@@ -1704,9 +1704,11 @@ async def get_stats_embed():
     pingss = "N/A"  # Replace with actual ping measurement
     
     # Create embed with API 7 design
+    current_game = stats.get('playlist', {}).get('current', 'N/A')
+    next_game = stats.get('playlist', {}).get('next', 'N/A')
     embed = discord.Embed(
         title="", 
-        description=f"### {server} \n\n\n```ocaml\nCurrent Game: {stats['playlist']['current']}\nNext Game: {stats['playlist']['next']}```"
+        description= f"### {server} \n\n\n```ocaml\nCurrent Game: {current_game}\nNext Game: {next_game}```"
     )
     
     embed.set_author(
