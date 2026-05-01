@@ -1576,7 +1576,9 @@ async def refresh_stats():
                     await livestatsmsgs[1].edit(embed=chat_embed)
                     
         except Exception as e:
+            import traceback
             print(f"Error updating stats: {e}")
+            traceback.print_exc()
         await asyncio.sleep(3)
 
 async def send_logs():
