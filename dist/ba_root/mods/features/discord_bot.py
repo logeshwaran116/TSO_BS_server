@@ -1637,7 +1637,7 @@ async def send_logs():
 
 async def get_stats_embed():
     global stats
-    
+    stats = bss.get_stats()
     # Get system info
     cpu = psutil.cpu_percent()
     ram = psutil.virtual_memory().percent
