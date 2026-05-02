@@ -1564,16 +1564,26 @@ async def refresh_stats():
     while not client.is_closed():
         try:
             # Update stats from the collector
-            bs_data_collector.update_discord_stats()
-            
+            stats_channel = client.get_channel(LIVE_STATS_CHANNEL_ID)
             if len(livestatsmsgs) >= 1:
                 stats_embed = await get_stats_embed()
-                await livestatsmsgs[0].edit(embed=stats_embed)
-            
+                try:
+                    await livestatsmsgs[0].edit(embed=stats_embed)
+                except discord.errors.NotFound:
+                    livestatsmsgs.clear()
+                    if stats_channel:
+                        msg = await stats_channel.send(embed=stats_embed)
+                        livestatsmsgs.append(msg)
+
             if len(livestatsmsgs) >= 2:
                 chat_embed = await get_chat_embed()
                 if chat_embed.description != 'disabled':
-                    await livestatsmsgs[1].edit(embed=chat_embed)
+                    try:
+                        await livestatsmsgs[1].edit(embed=chat_embed)
+                    except discord.errors.NotFound:
+                        if stats_channel:
+                            msg = await stats_channel.send(embed=chat_embed)
+                            livestatsmsgs.append(msg)
                     
         except Exception as e:
             import traceback
