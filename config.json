@@ -13,7 +13,7 @@
     "ffa_series_length": 24,
     "idle_exit_minutes": 20,
     "log_levels": null,
-    "max_party_size": 17,
+    "max_party_size": 12,
     "party_is_public": true,
     "party_name": "\ud83d\udcabTAMIL SERVER OFFICIAL \u2728",
     "player_rejoin_cooldown": 3,
