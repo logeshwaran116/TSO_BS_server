@@ -1637,7 +1637,10 @@ async def send_logs():
 
 async def get_stats_embed():
     global stats
-    stats = bss.get_stats()
+    stats = bss.get_stats() or {}
+    stats.setdefault('roster', {})
+    stats.setdefault('chats', [])
+    stats.setdefault('playlist', {'current': 'Unknown', 'next': 'Unknown'})
     # Get system info
     cpu = psutil.cpu_percent()
     ram = psutil.virtual_memory().percent
