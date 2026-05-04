@@ -48,7 +48,11 @@ class UFO(bs.Actor):
          def pass_():
             self.regs.clear()
             bs.timer(3875*0.001, self.move)
-            try:  bs.timer(3277*0.001, lambda: Bomb(velocity=(0,0,0), position=(self.target[0], self.node.position[1]-0.43999, self.target[2]), bomb_type='impact').autoretain().arm())
+            try:
+               def _drop_bomb():
+                  if self.node.exists():
+                     Bomb(velocity=(0,0,0), position=(self.target[0], self.node.position[1]-0.43999, self.target[2]), bomb_type='impact').autoretain().arm()
+               bs.timer(3277*0.001, _drop_bomb)
             except: pass
          key = bs.Material()
          key.add_actions(
