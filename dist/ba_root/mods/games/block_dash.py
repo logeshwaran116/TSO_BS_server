@@ -339,6 +339,7 @@ class BlockDashGame(EliminationGame):
                                     'color_texture':bs.gettexture('flagColor'),
                                     'mesh_scale':14.5,
                                     'reflection_scale':[1.5],
+                                    'gravity_scale':0.0,
                                     'materials':[self.mat, shared.object_material,shared.footing_material],
                                     })
         mnode = bs.newnode('math',
@@ -348,13 +349,61 @@ class BlockDashGame(EliminationGame):
                                    'operation': 'add'
                                })
 
-        node.changerotation(1,0,0)
 
         ud_1_r.connectattr('position', mnode, 'input2')
         mnode.connectattr('output', node, 'position')
-        bs.timer(8,babase.Call(self.create_block_wall_easy))
+        bs.timer(8, babase.Call(self._start_continuous_walls))
         self.gate_count=4
         self.wall_count=0
+
+    # Gap between walls in seconds - change this to adjust spacing
+    WALL_GAP = 3.0
+
+    def _start_continuous_walls(self):
+        """Start spawning walls continuously with a fixed gap."""
+        self.wall_count = 0
+        self._wall_timer = bs.Timer(
+            self.WALL_GAP,
+            babase.Call(self._spawn_next_wall),
+            repeat=True
+        )
+
+    def _spawn_next_wall(self):
+        self.wall_count += 1
+        if self.wall_count <= 5:
+            self._spawn_easy_wall()
+        elif self.wall_count <= 10:
+            self._spawn_hard_wall()
+        else:
+            self._spawn_hardest_wall()
+
+    def _spawn_easy_wall(self):
+        x = -9
+        c = 0
+        for i in range(0, 17):
+            if random.randrange(0, 2) and c < self.gate_count:
+                pass
+            else:
+                self.create_block(x, 0.5)
+                c += 1
+            x += 0.85
+
+    def _spawn_hard_wall(self):
+        x = -9
+        for i in range(0, 17):
+            self.create_block(x, 0.4)
+            x += 0.85
+
+    def _spawn_hardest_wall(self):
+        # Full solid wall + small middle cluster on top
+        x = -9
+        for i in range(0, 17):
+            self.create_block(x, 0.4)
+            x += 0.85
+        x = -3
+        for i in range(0, 7):
+            self.create_block(x, 1.2)
+            x += 0.85
 
     def create_wall(self):
         x=-9
@@ -362,44 +411,6 @@ class BlockDashGame(EliminationGame):
             self.create_block(x,0.5)
             self.create_block(x,1.2)
             x=x+0.85
-
-    def create_block_wall_hardest(self):
-        x=-3
-
-        for i in range(0,7):
-            self.create_block(x,0.4)
-            x=x+0.85
-        bs.timer(1.5,babase.Call(self.create_wall))
-        bs.timer(15,babase.Call(self.create_block_wall_hardest))
-
-    def create_block_wall_hard(self):
-        x=-9
-        self.wall_count+=1
-        for i in range(0,17):
-            self.create_block(x,0.4)
-            x=x+0.85
-        if self.wall_count <4:
-            bs.timer(12,babase.Call(self.create_block_wall_hard))
-        else:
-            bs.timer(7,babase.Call(self.create_block_wall_hard))  #hardest too heavy to play
-
-
-    def create_block_wall_easy(self):
-        x=-9
-        c=0
-        for i in range(0,17):
-            if random.randrange(0,2) and c<self.gate_count:
-                pass
-            else:
-                self.create_block(x,0.5)
-                c+=1
-            x=x+0.85
-        self.wall_count+=1
-        if self.wall_count < 5:
-            bs.timer(11,babase.Call(self.create_block_wall_easy))
-        else:
-            self.wall_count=0
-            bs.timer(15,babase.Call(self.create_block_wall_hard))
 
 
 
@@ -438,6 +449,7 @@ class BlockDashGame(EliminationGame):
                                     'color_texture':bs.gettexture('tnt'),
                                     'mesh_scale':1.2,
                                     'reflection_scale':[1.5],
+                                    'gravity_scale':0.0,
                                     'materials':[self.mat, shared.object_material,shared.footing_material],
 
                                     'density':9000000000
@@ -449,7 +461,6 @@ class BlockDashGame(EliminationGame):
                                    'operation': 'add'
                                })
 
-        node.changerotation(1,0,0)
 
         ud_1_r.connectattr('position', mnode, 'input2')
         mnode.connectattr('output', node, 'position')

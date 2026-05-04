@@ -1,5 +1,5 @@
 # Porting to api 8 made easier by baport.(https://github.com/bombsquad-community/baport)
-# ba_meta require api 8
+# ba_meta require api 9
 
 from __future__ import annotations
 
@@ -73,7 +73,7 @@ class ThePadMapb(bs.Map):
             'bottom_mesh': bs.getmesh('thePadLevelBottom'),
             'collision_mesh': bs.getcollisionmesh('thePadLevelCollide'),
             'tex': bs.gettexture('thePadLevelColor'),
-            'bgtex': bs.gettexture('black'),
+            'bgtex': bs.gettexture('bg'),
             'bgmesh': bs.getmesh('thePadBG'),
             'railing_collision_mesh': bs.getcollisionmesh('thePadLevelBumper'),
             'vr_fill_mound_mesh': bs.getmesh('thePadVRFillMound'),
@@ -106,7 +106,8 @@ class ThePadMapb(bs.Map):
                 'mesh': self.preloaddata['bgmesh'],
                 'lighting': False,
                 'background': True,
-                'color_texture': self.preloaddata['bgtex']
+                'color_texture': self.preloaddata['bgtex'],
+                'color': (5, 3, 3)
             })
         self.railing = bs.newnode(
             'terrain',
@@ -131,7 +132,7 @@ class ThePadMapb(bs.Map):
         gnode.vignette_inner = (0.95, 0.95, 0.93)
 
 
-# ba_meta export plugin
+# ba_meta export babase.Plugin
 class NewMap(babase.Plugin):
     """My first ballistica plugin!"""
 
@@ -543,7 +544,7 @@ class RaceGame(bs.TeamGameActivity[Player, Team]):
     """Game of racing around a track."""
 
     name = 'Hyper Race'
-    description = 'Creado Por Cebolla!!'
+    description = 'Created by Cebolla!!'
     scoreconfig = bs.ScoreConfig(label='Time',
                                  lower_is_better=True,
                                  scoretype=bs.ScoreType.MILLISECONDS)
@@ -911,7 +912,7 @@ class RaceGame(bs.TeamGameActivity[Player, Team]):
         for i in range(4):
             lnub = bs.newnode('image',
                               attrs={
-                                  'texture': bs.gettexture('nub'),
+                                  'texture': bs.gettexture('circle'),
                                   'opacity': 1.0,
                                   'absolute_scale': True,
                                   'position': (-75 + i * 50, light_y),
@@ -1079,6 +1080,7 @@ class RaceGame(bs.TeamGameActivity[Player, Team]):
         assert self._start_lights is not None
         self._start_lights[3].color = (0.0, 1.0, 0)
         self._beep_2_sound.play()
+        bs.getsound('laserReverse').play()
         for player in self.players:
             if player.actor is not None:
                 try:
