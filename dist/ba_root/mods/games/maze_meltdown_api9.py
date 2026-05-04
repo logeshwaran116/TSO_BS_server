@@ -654,7 +654,10 @@ class MazeRaceMap(bs.Map):
         self.spawn_points = self.get_def_points('spawn') or [(0,0,0,0,0,0)]
         self.ffa_spawn_points = self.get_def_points('ffa_spawn') or [(0,0,0,0,0,0)]
 
-bs.register_map(MazeRaceMap)
+try:
+    bs.register_map(MazeRaceMap)
+except RuntimeError:
+    pass
 
 
 # ═══════════════════════════════════════════════════════════════

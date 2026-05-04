@@ -125,7 +125,10 @@ class RumbleRushMap(bs.Map):
         self.node = self.background
 
 
-bs.register_map(RumbleRushMap)
+try:
+    bs.register_map(RumbleRushMap)
+except RuntimeError:
+    pass
 
 
 # ────────────────────────────────────────────────────────────

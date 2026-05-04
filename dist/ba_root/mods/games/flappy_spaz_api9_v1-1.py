@@ -153,7 +153,10 @@ class FlappySpazMap(bs.Map):
         self.is_flying = True
 
 
-bs.register_map(FlappySpazMap)
+try:
+    bs.register_map(FlappySpazMap)
+except RuntimeError:
+    pass
 
 
 # ---------------------------------------------------------------------------

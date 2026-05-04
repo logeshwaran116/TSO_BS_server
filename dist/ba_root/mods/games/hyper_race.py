@@ -132,12 +132,18 @@ class ThePadMapb(bs.Map):
         gnode.vignette_inner = (0.95, 0.95, 0.93)
 
 
+# Register map at module level so server can find it before playlist scan
+try:
+    _map.register_map(ThePadMapb)
+except RuntimeError:
+    pass
+
 # ba_meta export babase.Plugin
 class NewMap(babase.Plugin):
     """My first ballistica plugin!"""
 
     def on_app_running(self) -> None:
-        _map.register_map(ThePadMapb)
+        pass
 
 
 class NewBlast(Blast):

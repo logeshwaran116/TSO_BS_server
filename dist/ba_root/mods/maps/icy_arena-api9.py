@@ -178,8 +178,14 @@ class MyMap(ba.Map):
         gnode.vignette_outer = (0.79, 0.79, 0.69)
         gnode.vignette_inner = (0.97, 0.97, 0.99)
         
+# Register map at module level so server can find it before playlist scan
+try:
+    ba._map.register_map(MyMap)
+except RuntimeError:
+    pass
+
 # ba_meta export babase.Plugin
 class MapMaker(ba.Plugin):
     def __init__(self) -> None:
-        ba._map.register_map(MyMap)
+        pass
     
