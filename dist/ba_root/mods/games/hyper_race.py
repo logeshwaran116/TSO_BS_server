@@ -787,7 +787,7 @@ class RaceGame(bs.TeamGameActivity[Player, Team]):
                         try:
                             assert isinstance(player.actor, PlayerSpaz)
                             mathnode = bs.newnode('math',
-                                                  owner=player.actor.node,
+                                                  owner=player.actor.node if player.actor.node.exists() else None,
                                                   attrs={
                                                       'input1': (0, 1.9, 0),
                                                       'operation': 'add'
@@ -1157,7 +1157,7 @@ class RaceGame(bs.TeamGameActivity[Player, Team]):
             spaz.disconnect_controls_from_player()
 
         mathnode = bs.newnode('math',
-                              owner=spaz.node,
+                              owner=spaz.node if spaz.node.exists() else None,
                               attrs={
                                   'input1': (0, 1.4, 0),
                                   'operation': 'add'
@@ -1165,7 +1165,7 @@ class RaceGame(bs.TeamGameActivity[Player, Team]):
         spaz.node.connectattr('torso_position', mathnode, 'input2')
 
         distance_txt = bs.newnode('text',
-                                  owner=spaz.node,
+                                  owner=spaz.node if spaz.node.exists() else None,
                                   attrs={
                                       'text': '',
                                       'in_world': True,

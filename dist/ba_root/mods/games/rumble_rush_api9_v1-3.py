@@ -1514,12 +1514,12 @@ class RumbleRushGame(bs.TeamGameActivity[Player, Team]):
 
         # Rank text above head.
         mathnode = bs.newnode(
-            'math', owner=spaz.node,
+            'math', owner=spaz.node if spaz.node.exists() else None,
             attrs={'input1': (0, 1.4, 0), 'operation': 'add'},
         )
         spaz.node.connectattr('torso_position', mathnode, 'input2')
         txt = bs.newnode(
-            'text', owner=spaz.node,
+            'text', owner=spaz.node if spaz.node.exists() else None,
             attrs={
                 'text': '',
                 'in_world': True,

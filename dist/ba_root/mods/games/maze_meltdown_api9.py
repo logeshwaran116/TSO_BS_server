@@ -1414,7 +1414,7 @@ class MazeRaceGame(bs.TeamGameActivity[Player, Team]):
             spaz = player.actor
             if not isinstance(spaz, PlayerSpaz) or not spaz.node:
                 return
-            m = bs.newnode('math', owner=spaz.node,
+            m = bs.newnode('math', owner=spaz.node if spaz.node.exists() else None,
                            attrs={'input1': (0, 2.2, 0), 'operation': 'add'})
             spaz.node.connectattr('torso_position', m, 'input2')
             score_display = int(player.live_score) if player.live_score > 0 else self._start_score
@@ -1481,7 +1481,7 @@ class MazeRaceGame(bs.TeamGameActivity[Player, Team]):
         try:
             assert isinstance(player.actor, PlayerSpaz)
             assert player.actor.node
-            m = bs.newnode('math', owner=player.actor.node,
+            m = bs.newnode('math', owner=player.actor.node if player.actor.node.exists() else None,
                            attrs={'input1': (0, 2.6, 0), 'operation': 'add'})
             player.actor.node.connectattr('torso_position', m, 'input2')
             result_color = (
