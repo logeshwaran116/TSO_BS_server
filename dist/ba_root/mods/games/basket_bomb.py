@@ -776,5 +776,9 @@ class BasketMapV2(maps.HockeyStadium):
         ]
 
 
-bs._map.register_map(BasketMap)
-bs._map.register_map(BasketMapV2)
+
+for _map_type in [BasketMap, BasketMapV2]:
+    try:
+        bs._map.register_map(_map_type)
+    except RuntimeError:
+        pass  # Already registered, safe to ignore
