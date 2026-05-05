@@ -1553,7 +1553,7 @@ async def refresh_game_info(channel: discord.TextChannel):
 
         except Exception as e:
             print(f"Error in refresh_game_info: {e}")
-        await asyncio.sleep(5)
+        await asyncio.sleep(15)  # Increased to avoid rate limits
 
 async def refresh_stats():
     await client.wait_until_ready()
@@ -1580,6 +1580,8 @@ async def refresh_stats():
                     msg = await stats_channel.send(embed=stats_embed)
                     livestatsmsgs.insert(0, msg)
 
+            await asyncio.sleep(5)  # Stagger chat embed update to avoid rate limit
+
             # Handle chat embed (index 1)
             chat_embed = await get_chat_embed()
             if chat_embed.description != 'disabled':
@@ -1599,7 +1601,7 @@ async def refresh_stats():
             import traceback
             print(f"Error updating stats: {e}")
             traceback.print_exc()
-        await asyncio.sleep(3)
+        await asyncio.sleep(15)  # Increased from 3s to 15s to avoid Discord rate limits
 
 async def send_logs():
     global logs, _send_logs_running
