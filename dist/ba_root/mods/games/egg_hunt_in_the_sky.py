@@ -203,7 +203,7 @@ class EggHuntInTheSkyGame(bs.TeamGameActivity[Player, Team]):
             # Respawn them shortly.
             player = msg.getplayer(Player)
             assert self.initialplayerinfos is not None
-            respawn_time = 2.0 + len(self.initialplayerinfos) * 1.0
+            respawn_time = len(self.initialplayerinfos) * 1.0
             player.respawn_timer = bs.Timer(
                 respawn_time, bs.Call(self.spawn_player_if_exists, player)
             )
