@@ -1360,7 +1360,7 @@ async def verify_channel():
 async def setup_live_stats(stats_channel):
     """Setup live stats messages in the stats channel"""
     global livestatsmsgs
-    global _refresh_stats_task, _send_logs_task
+    global _refresh_stats_task, _send_logs_task, _send_error_logs_task
     
     # Get messages (updated method)
     botmsg_count = 0
