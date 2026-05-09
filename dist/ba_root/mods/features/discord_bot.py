@@ -75,6 +75,7 @@ _logs_lock = Lock()
 _send_logs_running = False
 _refresh_stats_task = None
 _send_logs_task = None
+_send_error_logs_task = None
 _refresh_game_info_task = None
 
 # Cache for messages in game-info channel: { key -> discord.Message }
