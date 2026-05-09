@@ -2541,7 +2541,10 @@ zk2059 = [SpazMap, RampageMod, BridgitC, thec, collosal_monkey, tZoe, rT, #ULTIM
 
 def register_maps():
     for new_map in zk2059:
-        _map.register_map(new_map)
+        try:
+            _map.register_map(new_map)
+        except RuntimeError:
+            pass  # Already registered
 # Crown 
 # ba_meta export babase.Plugin
 class Zk2059(babase.Plugin):

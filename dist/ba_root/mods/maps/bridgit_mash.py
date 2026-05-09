@@ -233,4 +233,7 @@ class BridgitMash(bs.Map):
             player.shatter(True)
 
 
-bs._map.register_map(BridgitMash)
+try:
+    bs._map.register_map(BridgitMash)
+except RuntimeError:
+    pass

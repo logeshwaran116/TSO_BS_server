@@ -214,4 +214,7 @@ class WoodenFloor(bs.Map):
             player.shatter(True)
 
 
-bs._map.register_map(WoodenFloor)
+try:
+    bs._map.register_map(WoodenFloor)
+except RuntimeError:
+    pass

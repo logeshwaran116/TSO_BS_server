@@ -170,4 +170,7 @@ class CreativeThoughts(bs.Map):
 
 
 
-bs._map.register_map(CreativeThoughts)
+try:
+    bs._map.register_map(CreativeThoughts)
+except RuntimeError:
+    pass

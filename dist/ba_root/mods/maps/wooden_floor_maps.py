@@ -211,4 +211,7 @@ class WoodenFloor(bs.Map):
 
 
 
-bs._map.register_map(WoodenFloor)
+try:
+    bs._map.register_map(WoodenFloor)
+except RuntimeError:
+    pass

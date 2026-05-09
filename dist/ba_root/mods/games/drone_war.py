@@ -22,7 +22,7 @@ from babase._mgen.enums import InputType
 from bascenev1lib.actor.bomb import Blast
 
 from bascenev1lib.gameutils import SharedObjects
-from bascenev1lib.actor.playerspaz import PlayerSpaz, PlayerT
+from bascenev1lib.actor.playerspaz import PlayerSpaz
 from bascenev1lib.game.deathmatch import DeathMatchGame, Player
 from bascenev1lib.actor import spaz
 if TYPE_CHECKING:
@@ -389,7 +389,7 @@ class ChooseQueen(DeathMatchGame):
 
     def spawn_player_spaz(
         self,
-        player: PlayerT,
+        player: PlayerSpaz,
         position: Sequence[float] | None = None,
         angle: float | None = None,
     ) -> PlayerSpaz:
