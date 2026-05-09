@@ -25,6 +25,24 @@ except Exception:
     import bombsquad_service as bss  # type: ignore
 
 logging.getLogger('asyncio').setLevel(logging.WARNING)
+
+class DiscordErrorHandler(logging.Handler):
+    """Logging handler that sends ERROR and WARNING messages to Discord."""
+    def emit(self, record: logging.LogRecord) -> None:
+        if record.levelno >= logging.WARNING:
+            try:
+                ts = datetime.datetime.now().strftime('%H:%M:%S')
+                level = record.levelname
+                msg = self.format(record)
+                push_error_log(f"[{ts}] [{level}] {msg}")
+            except Exception:
+                pass
+
+# Install the handler on the root logger
+_discord_error_handler = DiscordErrorHandler()
+_discord_error_handler.setLevel(logging.WARNING)
+logging.getLogger().addHandler(_discord_error_handler)
+
 intents = discord.Intents().all()
 
 client = Bot(command_prefix='!', intents=intents)
@@ -40,6 +58,7 @@ stats = {
 livestatsmsgs = []
 # Channel IDs - loaded from setting.json (see _load_channel_ids() in init())
 LOGS_CHANNEL_ID = 1467401251561017384
+ERROR_LOG_CHANNEL_ID = 1502641543193038848  # Channel for errors/warnings
 LIVE_STATS_CHANNEL_ID = 1467399612288471162
 DIRECT_CMD_CHANNEL_ID = 1467402520828706817
 ROLE_CMD_CHANNEL_IDS = [1467421373617143985]
@@ -111,6 +130,12 @@ def push_log(msg):
     global logs
     with _logs_lock:
         logs.append(msg)
+
+def push_error_log(msg: str):
+    """Queue an error/warning message to send to Discord."""
+    global _error_logs
+    with _error_logs_lock:
+        _error_logs.append(msg)
 
 def _load_channel_ids():
     """Load all Discord channel IDs from setting.json."""
@@ -1370,6 +1395,8 @@ async def setup_live_stats(stats_channel):
             _refresh_stats_task = asyncio.create_task(refresh_stats())
         if _send_logs_task is None or _send_logs_task.done():
             _send_logs_task = asyncio.create_task(send_logs())
+        if _send_error_logs_task is None or _send_error_logs_task.done():
+            _send_error_logs_task = asyncio.create_task(send_error_logs())
 
 async def setup_game_info(stats_channel: discord.TextChannel):
     """Get game-info channel by ID and start updater task."""
@@ -1646,6 +1673,47 @@ async def send_logs():
             await asyncio.sleep(10)
     finally:
         _send_logs_running = False
+
+async def send_error_logs():
+    """Send ERROR and WARNING messages to the error log channel."""
+    global _error_logs, _send_error_logs_running
+    if _send_error_logs_running:
+        return
+    _send_error_logs_running = True
+    channel = client.get_channel(ERROR_LOG_CHANNEL_ID)
+    if not channel:
+        print(f"Error: Could not find error log channel with ID {ERROR_LOG_CHANNEL_ID}")
+        _send_error_logs_running = False
+        return
+    try:
+        await client.wait_until_ready()
+        while not client.is_closed():
+            batch = []
+            with _error_logs_lock:
+                if _error_logs:
+                    total_len = 0
+                    take_count = 0
+                    for msg_ in _error_logs:
+                        add_len = len(msg_) + 1
+                        if total_len + add_len >= 1900:
+                            break
+                        batch.append(msg_)
+                        total_len += add_len
+                        take_count += 1
+                    if take_count > 0:
+                        del _error_logs[:take_count]
+            if batch:
+                msg = "\n".join(batch)
+                try:
+                    await channel.send(f"```\n{msg}\n```")
+                except Exception as e:
+                    with _error_logs_lock:
+                        _error_logs = batch + _error_logs
+                    print(f"Error sending error logs: {e}")
+            await asyncio.sleep(10)
+    finally:
+        _send_error_logs_running = False
+
 
 async def get_stats_embed():
     global stats
