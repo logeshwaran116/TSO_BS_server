@@ -385,6 +385,9 @@ class Blast(bs.Actor):
         if self.blast_type == 'ice':
             explosion.color = (0, 0.05, 0.4)
 
+        if self.blast_type == 'normal':
+            explosion.color = (0.7, 0.1, 0.3)
+
         bs.timer(1.0, explosion.delete)
 
         if self.blast_type != 'ice':
@@ -575,7 +578,16 @@ class Blast(bs.Actor):
             # It looks better if we delay a bit.
             bs.timer(0.05, emit)
 
-        lcolor = (0.6, 0.6, 1.0) if self.blast_type == 'ice' else (1, 0.3, 0.1)
+        
+        if self.blast_type == 'ice':
+            lcolor = (0.6, 0.6, 1.0)
+
+        elif self.blast_type == 'normal':
+            lcolor = (0.7, 0.1, 0.3)
+            
+        else:
+            lcolor = (1, 0.3, 0.1)
+
         light = bs.newnode(
             'light',
             attrs={

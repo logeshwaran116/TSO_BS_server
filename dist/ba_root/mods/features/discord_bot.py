@@ -38,9 +38,12 @@ class DiscordErrorHandler(logging.Handler):
             except Exception:
                 pass
 
-# Install the handler on the root logger
+# Install handler on BombSquad's 'ba' logger (outputs ERROR ba: / WARNING ba:)
 _discord_error_handler = DiscordErrorHandler()
 _discord_error_handler.setLevel(logging.WARNING)
+logging.getLogger('ba').addHandler(_discord_error_handler)
+logging.getLogger('ba.app').addHandler(_discord_error_handler)
+# Also catch Python-level errors
 logging.getLogger().addHandler(_discord_error_handler)
 
 intents = discord.Intents().all()

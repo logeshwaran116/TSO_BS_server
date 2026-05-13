@@ -84,7 +84,7 @@ class checkserver(object):
             else:
                 ipClientMap[ip].append(ros["client_id"])
                 if len(ipClientMap[ip]) >= settings['maxAccountPerIP']:
-                    _babase.chatmessage(
+                    bs.chatmessage(
                         f"Only {settings['maxAccountPerIP']} player per IP allowed, disconnecting this device.",
                         clients=[
                             ros["client_id"]])
@@ -225,7 +225,7 @@ def on_player_join_server(pbid, player_data, ip, device_id):
             {"client_id": clid, "deviceId": device_string, "pbid": pbid, "ip": ip, "device_uuid": device_id})
         serverdata.recents = serverdata.recents[-20:]
         if check_ban(ip, device_id, pbid):
-            _babase.chatmessage(
+            bs.chatmessage(
                 'sad ,your account is flagged contact server owner for unban',
                 clients=[clid])
             bs.disconnect_client(clid)
