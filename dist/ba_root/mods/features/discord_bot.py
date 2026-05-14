@@ -26,25 +26,31 @@ except Exception:
 
 logging.getLogger('asyncio').setLevel(logging.WARNING)
 
-class DiscordErrorHandler(logging.Handler):
-    """Logging handler that sends ERROR and WARNING messages to Discord."""
-    def emit(self, record: logging.LogRecord) -> None:
-        if record.levelno >= logging.WARNING:
-            try:
-                ts = datetime.datetime.now().strftime('%H:%M:%S')
-                level = record.levelname
-                msg = self.format(record)
-                push_error_log(f"[{ts}] [{level}] {msg}")
-            except Exception:
-                pass
+def _bs_log_callback(entry: object) -> None:
+    """Callback hooked into BombSquad's efro LogHandler for ERROR/WARNING."""
+    try:
+        from efro.logging import LogLevel
+        if not hasattr(entry, 'level') or not hasattr(entry, 'message'):
+            return
+        if entry.level in (LogLevel.WARNING, LogLevel.ERROR, LogLevel.CRITICAL):
+            ts = datetime.datetime.now().strftime('%H:%M:%S')
+            level = entry.level.name
+            push_error_log(f"[{ts}] [{level}] {entry.message.strip()}")
+    except Exception:
+        pass
 
-# Install handler on BombSquad's 'ba' logger (outputs ERROR ba: / WARNING ba:)
-_discord_error_handler = DiscordErrorHandler()
-_discord_error_handler.setLevel(logging.WARNING)
-logging.getLogger('ba').addHandler(_discord_error_handler)
-logging.getLogger('ba.app').addHandler(_discord_error_handler)
-# Also catch Python-level errors
-logging.getLogger().addHandler(_discord_error_handler)
+def _install_bs_log_callback() -> None:
+    """Hook into BombSquad's logging system after app starts."""
+    try:
+        import baenv
+        cfg = baenv.get_config()
+        if cfg.log_handler is not None:
+            cfg.log_handler.add_callback(_bs_log_callback, feed_existing_logs=False)
+            print("Discord error log callback installed.")
+        else:
+            print("Warning: log_handler not available yet.")
+    except Exception as e:
+        print(f"Failed to install BS log callback: {e}")
 
 intents = discord.Intents().all()
 
@@ -1401,6 +1407,8 @@ async def setup_live_stats(stats_channel):
             _send_logs_task = asyncio.create_task(send_logs())
         if _send_error_logs_task is None or _send_error_logs_task.done():
             _send_error_logs_task = asyncio.create_task(send_error_logs())
+        # Hook into BombSquad's log system
+        _install_bs_log_callback()
 
 async def setup_game_info(stats_channel: discord.TextChannel):
     """Get game-info channel by ID and start updater task."""
@@ -1542,6 +1550,7 @@ async def refresh_game_info(channel: discord.TextChannel):
                 else:
                     try:
                         await msg.edit(embed=emb)
+                        await asyncio.sleep(3)  # Gap between edits to avoid rate limit
                     except discord.NotFound:
                         try:
                             msg = await channel.send(embed=emb)
@@ -1563,6 +1572,7 @@ async def refresh_game_info(channel: discord.TextChannel):
                     print(f"Failed to send lobby embed: {e}")
             else:
                 try:
+                    await asyncio.sleep(3)  # Gap before lobby edit
                     await lmsg.edit(embed=lobby_emb)
                 except discord.NotFound:
                     try:
@@ -1584,7 +1594,7 @@ async def refresh_game_info(channel: discord.TextChannel):
 
         except Exception as e:
             print(f"Error in refresh_game_info: {e}")
-        await asyncio.sleep(15)  # Increased to avoid rate limits
+        await asyncio.sleep(30)  # Increased to 30s to avoid rate limits
 
 async def refresh_stats():
     await client.wait_until_ready()
