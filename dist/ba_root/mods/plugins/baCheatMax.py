@@ -1658,7 +1658,7 @@ class CommandFunctions:
 
                     else:
 
-                        ClientMessage(f'{type(e).__name__}: {e}')
+                        ClientMessage(f'{type(exc).__name__}: {exc}')
 
                     ClientMessage(getlanguage('EX', subs=ms[0] + ' 0 | ' + ms[0] + ' all'))
 
