@@ -15,6 +15,12 @@ from playersdata import pdata as pdata
 
 import babase
 import bascenev1 as bs
+
+try:
+    from features import leaderboard as _leaderboard
+except Exception as e:
+    print(f'[leaderboard] Import failed: {e}')
+    _leaderboard = None
 from babase._general import Call
 
 # Import BombSquad service to read pre-collected team/roster info
@@ -1409,6 +1415,13 @@ async def setup_live_stats(stats_channel):
             _send_error_logs_task = asyncio.create_task(send_error_logs())
         # Hook into BombSquad's log system
         _install_bs_log_callback()
+        # Start leaderboard loop
+        if _leaderboard is not None:
+            global _leaderboard_task
+            if _leaderboard._leaderboard_task is None or _leaderboard._leaderboard_task.done():
+                _leaderboard._leaderboard_task = asyncio.create_task(
+                    _leaderboard.run_leaderboard_loop(client, discord)
+                )
 
 async def setup_game_info(stats_channel: discord.TextChannel):
     """Get game-info channel by ID and start updater task."""
