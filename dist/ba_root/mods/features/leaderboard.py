@@ -21,7 +21,7 @@ CATEGORIES:
 from __future__ import annotations
 
 import asyncio
-import datetime
+from datetime import datetime, timezone
 import sys
 import os
 
@@ -86,14 +86,17 @@ def build_leaderboard_embed(import_discord: object) -> object:
     discord = import_discord
     stats   = _get_stats()
     times   = _get_time_played()
-    now_str = datetime.datetime.now().strftime('%d %b %Y  %H:%M')
+    
 
     embed = discord.Embed(
         title='🏆  Server Leaderboard',
         color=0xFFAA00,
-        timestamp=datetime.datetime.utcnow(),
+        timestamp=datetime.now(timezone.utc)
     )
-    embed.set_footer(text=f'Updated  {now_str}  •  Top {TOP_N} players')
+    embed.set_footer(
+        text=f'Updates Every {UPDATE_INTERVAL} minute{"s" if UPDATE_INTERVAL > 1 else ""}',
+        icon_url = "https://upload.wikimedia.org/wikipedia/commons/3/3a/Gray_circles_rotate.gif?_=20110906194014"
+    )
 
     if not stats:
         embed.description = '_No stats yet — play some games!_'
