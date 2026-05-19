@@ -1585,7 +1585,7 @@ async def refresh_game_info(channel: discord.TextChannel):
                     print(f"Failed to send lobby embed: {e}")
             else:
                 try:
-                    await asyncio.sleep(3)  # Gap before lobby edit
+                    await asyncio.sleep(1)  # Gap before lobby edit
                     await lmsg.edit(embed=lobby_emb)
                 except discord.NotFound:
                     try:
@@ -1607,7 +1607,7 @@ async def refresh_game_info(channel: discord.TextChannel):
 
         except Exception as e:
             print(f"Error in refresh_game_info: {e}")
-        await asyncio.sleep(30)  # Increased to 30s to avoid rate limits
+        await asyncio.sleep(10)  # Increased to 30s to avoid rate limits
 
 async def refresh_stats():
     await client.wait_until_ready()

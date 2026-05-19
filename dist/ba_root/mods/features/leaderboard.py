@@ -146,7 +146,7 @@ def build_leaderboard_embed(import_discord: object) -> object:
         inline=False,
     )
 
-    # ── Most Time Played ───────────────────────────────────
+    '''# ── Most Time Played ───────────────────────────────────
     time_entries = []
     for p in players:
         aid = p.get('aid', '')
@@ -175,7 +175,7 @@ def build_leaderboard_embed(import_discord: object) -> object:
         name='💥  Most Damage Dealt',
         value='\n'.join(dmg_lines) or '_No data_',
         inline=False,
-    )
+    )'''
 
     # ── Top Score ──────────────────────────────────────────
     top_score = sorted(players, key=lambda p: p.get('scores', 0), reverse=True)[:TOP_N]
