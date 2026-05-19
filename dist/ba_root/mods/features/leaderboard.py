@@ -219,6 +219,7 @@ async def run_leaderboard_loop(client: object, discord: object) -> None:
             if msg.embeds and msg.embeds[0].title == '🏆  Server Leaderboard':
                 print(f"found old stat message id: {msg.id}")
                 _leaderboard_msg_id = msg.id
+                break
 
 
     print('[leaderboard] Loop started.')
