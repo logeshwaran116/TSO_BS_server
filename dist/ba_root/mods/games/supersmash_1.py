@@ -811,7 +811,7 @@ class SuperSmashElimination(bs.TeamGameActivity[Player2, Team2]):
                             'WTF have',
                             len(player.icons),
                             'icons in non-solo elim')
-                    for icon in player.icons:
+                    for icon in (player.icons or []):
                         icon.set_position_and_scale((xval, 30), 0.7)
                         icon.update_for_lives()
                     xval += x_offs
@@ -870,7 +870,7 @@ class SuperSmashElimination(bs.TeamGameActivity[Player2, Team2]):
                                 'WTF have',
                                 len(player.icons),
                                 'icons in non-solo elim')
-                        for icon in player.icons:
+                        for icon in (player.icons or []):
                             icon.set_position_and_scale((xval, 30), 0.7)
                             icon.update_for_lives()
                         xval += x_offs
@@ -924,7 +924,7 @@ class SuperSmashElimination(bs.TeamGameActivity[Player2, Team2]):
         bs.timer(0.5, light.delete)
 
         # If we have any icons, update their state.
-        for icon in player.icons:
+        for icon in (player.icons or []):
             icon.handle_player_spawned()
 
         if self._boxing_gloves:
@@ -947,7 +947,7 @@ class SuperSmashElimination(bs.TeamGameActivity[Player2, Team2]):
                 player.lives = 0
 
             # if we have any icons, update their state
-            for icon in player.icons:
+            for icon in (player.icons or []):
                 icon.handle_player_died()
 
             # play big death sound on our last death

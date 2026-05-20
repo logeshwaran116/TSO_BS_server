@@ -400,7 +400,7 @@ class AllianceEliminationGame(bs.TeamGameActivity[Player, Team]):
         actor = self.spawn_player_spaz(player, self._get_spawn_point(player))
 
         # If we have any icons, update their state.
-        for icon in player.icons:
+        for icon in (player.icons or []):
             icon.handle_player_spawned()
         return actor
 
@@ -424,7 +424,10 @@ class AllianceEliminationGame(bs.TeamGameActivity[Player, Team]):
 
         # Remove us from spawn-order.
         if player in player.team.spawn_order:
-            player.team.spawn_order.remove(player)
+            if player in player.team.spawn_order:
+                if player in player.team.spawn_order:
+
+                    player.team.spawn_order.remove(player)
 
         # Update icons in a moment since our team will be gone from the
         # list then.
@@ -454,7 +457,7 @@ class AllianceEliminationGame(bs.TeamGameActivity[Player, Team]):
                 player.lives = 0
 
             # If we have any icons, update their state.
-            for icon in player.icons:
+            for icon in (player.icons or []):
                 icon.handle_player_died()
 
             # Play big death sound on our last death
@@ -471,7 +474,10 @@ class AllianceEliminationGame(bs.TeamGameActivity[Player, Team]):
                                                        self._start_time)
 
             # Put ourself at the back of the spawn order.
-            player.team.spawn_order.remove(player)
+            if player in player.team.spawn_order:
+                if player in player.team.spawn_order:
+
+                    player.team.spawn_order.remove(player)
             player.team.spawn_order.append(player)
 
     def _update(self) -> None:

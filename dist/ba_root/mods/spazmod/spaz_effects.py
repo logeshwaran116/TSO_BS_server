@@ -170,7 +170,16 @@ class NewPlayerSpaz(PlayerSpaz):
             "minipet": self._create_pet,  # Alias for mini character pet
             "blinkinvisible": self._add_blinkinvisible,  # Toggle full-body visibility every 1s
             "randblink": self._add_randblink,  # Randomly hide/show single body parts every 0.7s
-            "randomcharacter": self._add_randomcharacter  # Change character appearance every 5 seconds
+            "randomcharacter": self._add_randomcharacter,  # Change character appearance every 5 seconds
+            # ── New effects ──
+            "inferno": self._add_inferno,        # Raging fire trail with ember sparks
+            "ghostly": self._add_ghostly,        # Wispy ghost smoke + pale green glow
+            "electric": self._add_electric,      # Crackling electric sparks + lightning flashes
+            "galaxy": self._add_galaxy,          # Star nodes orbiting in two interlocked rings
+            "toxiccloud": self._add_toxiccloud,  # Green poison slime cloud
+            "aurora": self._add_aurora,          # Northern lights colored rings above head
+            "bloodmoon": self._add_bloodmoon,    # Crimson drips + red pulsing light
+            "demonwings": self._add_demonwings,  # Dark sweeping wings behind player
         }
         for effect in self.effects:
             trigger = self._effect_mappings.get(effect, lambda: None)
@@ -807,7 +816,7 @@ class NewPlayerSpaz(PlayerSpaz):
             m = 1.5
             np = self.node.position
             pos = (np[0] + p[0], np[1] + p[1], np[2] + p[2])
-            vel = (random.uniform(-m, m), random.uniform(2, 7), random.uniform(-m, m))
+            vel = (random.uniform(-m, m), random.uniform(0.5, 2.0), random.uniform(-m, m))
             texs = ['bombStickyColor', 'aliColor', 'aliColorMask', 'eggTex3']
             tex = bs.gettexture(random.choice(texs))
             mesh = bs.getmesh('flash')
@@ -850,7 +859,7 @@ class NewPlayerSpaz(PlayerSpaz):
             m = 1.5
             np = self.node.position
             pos = (np[0] + p[0], np[1] + p[1], np[2] + p[2])
-            vel = (random.uniform(-m, m), random.uniform(2, 7), random.uniform(-m, m))
+            vel = (random.uniform(-m, m), random.uniform(0.5, 2.0), random.uniform(-m, m))
             tex = bs.gettexture('null')
             node = bs.newnode('bomb',
                               owner=self.node,
@@ -1947,6 +1956,421 @@ class NewPlayerSpaz(PlayerSpaz):
                 node.velocity = (0.0, 0.0, 0.0)
             except Exception:
                 node.position = target_pos
+
+    # ══════════════════════════════════════════════════════════
+    #  NEW EFFECTS
+    # ══════════════════════════════════════════════════════════
+
+    @effect(repeat_interval=0.06)
+    def _add_inferno(self):
+        """Raging fire trail — intense flames, ember sparks, scorch ground marks."""
+        if not self.is_alive() or not self.node.exists():
+            return
+        pos = self.node.position
+        torso = self.node.torso_position
+        vel = self.node.velocity
+
+        # Rising fire tendrils from torso
+        bs.emitfx(
+            position=torso,
+            velocity=(vel[0] * 0.3, vel[1] * 0.3 + 1.5, vel[2] * 0.3),
+            count=random.randint(4, 8),
+            scale=random.uniform(0.6, 1.4),
+            spread=0.3,
+            chunk_type='sweat',
+        )
+        # Ember sparks
+        bs.emitfx(
+            position=torso,
+            velocity=(vel[0] + random.uniform(-2, 2), vel[1] + random.uniform(1, 4), vel[2] + random.uniform(-2, 2)),
+            count=random.randint(3, 6),
+            scale=0.35,
+            spread=0.4,
+            chunk_type='spark',
+        )
+        # Ground scorch stickers
+        if random.random() < 0.4:
+            bs.emitfx(
+                position=pos,
+                velocity=(0, 0, 0),
+                count=2,
+                scale=random.uniform(0.3, 0.7),
+                spread=0.3,
+                chunk_type='spark',
+                emit_type='stickers',
+            )
+        # Dynamic fire light
+        if not hasattr(self, '_inferno_light') or not self._inferno_light.exists():
+            self._inferno_light = bs.newnode(
+                'light', owner=self.node,
+                attrs={'color': (1.0, 0.35, 0.0), 'height_attenuated': False,
+                       'radius': 0.7, 'intensity': 0.0},
+            )
+            self.node.connectattr('position', self._inferno_light, 'position')
+        self._inferno_light.intensity = random.uniform(0.4, 0.9)
+        self._inferno_light.color = (
+            random.uniform(0.9, 1.0),
+            random.uniform(0.2, 0.45),
+            0.0,
+        )
+
+    @effect(repeat_interval=0.08)
+    def _add_ghostly(self):
+        """Ghost effect — wispy smoke trails and eerie pale green glow."""
+        if not self.is_alive() or not self.node.exists():
+            return
+        torso = self.node.torso_position
+        vel = self.node.velocity
+
+        # Wispy smoke upward trails
+        bs.emitfx(
+            position=torso,
+            velocity=(vel[0] * 0.2, vel[1] * 0.2 + 0.8, vel[2] * 0.2),
+            count=random.randint(2, 5),
+            scale=random.uniform(0.5, 1.2),
+            spread=0.2,
+            emit_type='tendrils',
+            tendril_type='thin_smoke',
+        )
+        # Occasional distortion pulse
+        if random.random() < 0.15:
+            bs.emitfx(position=torso, spread=0.5, emit_type='distortion')
+
+        # Ghostly pale green light
+        if not hasattr(self, '_ghost_light') or not self._ghost_light.exists():
+            self._ghost_light = bs.newnode(
+                'light', owner=self.node,
+                attrs={'color': (0.5, 1.0, 0.6), 'height_attenuated': False,
+                       'radius': 0.5, 'intensity': 0.15},
+            )
+            self.node.connectattr('position', self._ghost_light, 'position')
+            bs.animate(self._ghost_light, 'intensity', {0: 0.05, 0.8: 0.25, 1.6: 0.05}, loop=True)
+
+    @effect(repeat_interval=0.05)
+    def _add_electric(self):
+        """Electric storm — crackling sparks and blue-white lightning flashes."""
+        if not self.is_alive() or not self.node.exists():
+            return
+        torso = self.node.torso_position
+        vel = self.node.velocity
+
+        # Electric spark burst
+        bs.emitfx(
+            position=torso,
+            velocity=(vel[0] + random.uniform(-3, 3), vel[1] + random.uniform(-1, 3), vel[2] + random.uniform(-3, 3)),
+            count=random.randint(5, 12),
+            scale=random.uniform(0.2, 0.5),
+            spread=0.5,
+            chunk_type='spark',
+        )
+        # Electric distortion
+        if random.random() < 0.2:
+            bs.emitfx(position=torso, spread=0.6, emit_type='distortion')
+
+        # Pulsing electric light
+        if not hasattr(self, '_elec_light') or not self._elec_light.exists():
+            self._elec_light = bs.newnode(
+                'light', owner=self.node,
+                attrs={'color': (0.5, 0.8, 1.0), 'height_attenuated': False,
+                       'radius': 0.6, 'intensity': 0.3},
+            )
+            self.node.connectattr('position', self._elec_light, 'position')
+        # Random flicker
+        self._elec_light.intensity = random.uniform(0.1, 0.8)
+        self._elec_light.color = (
+            random.uniform(0.3, 0.7),
+            random.uniform(0.7, 1.0),
+            1.0,
+        )
+
+    @effect(repeat_interval=0.02)
+    def _add_galaxy(self):
+        """Galaxy orbit — tiny star nodes spiral around player in 3D rings."""
+        if not hasattr(self, '_galaxy_nodes'):
+            self._galaxy_nodes = []
+        if not hasattr(self, '_galaxy_angle'):
+            self._galaxy_angle = 0.0
+
+        if not self.is_alive() or not self.node.exists():
+            for n, l in getattr(self, '_galaxy_nodes', []):
+                if n.exists(): n.delete()
+                if l.exists(): l.delete()
+            self._galaxy_nodes = []
+            return
+
+        STAR_COUNT = 8
+        if len(self._galaxy_nodes) == 0:
+            ghost = self._build_ghost_material()
+            textures = ['aliColor', 'eggTex3', 'bombStickyColor', 'agentColor']
+            for i in range(STAR_COUNT):
+                n = bs.newnode('prop', owner=self.node, attrs={
+                    'body': 'sphere',
+                    'mesh': bs.getmesh('flash'),
+                    'color_texture': bs.gettexture(textures[i % len(textures)]),
+                    'mesh_scale': 0.12,
+                    'body_scale': 0.0,
+                    'shadow_size': 0.0,
+                    'gravity_scale': 0.0,
+                    'materials': ([ghost] if ghost else []),
+                })
+                l = bs.newnode('light', owner=n, attrs={
+                    'intensity': 0.3, 'radius': 0.03,
+                    'color': (random.random(), random.random(), random.random()),
+                    'volume_intensity_scale': 0.5,
+                })
+                n.connectattr('position', l, 'position')
+                self._galaxy_nodes.append((n, l))
+
+        self._galaxy_angle += 0.07
+        t = bs.time()
+        torso = self.node.torso_position
+        for i, (n, l) in enumerate(self._galaxy_nodes):
+            # Two interlocked rings at different tilts
+            ring = i % 2
+            angle = self._galaxy_angle + (i * math.pi * 2 / STAR_COUNT)
+            radius = 0.75 + ring * 0.2
+            tilt = math.pi / 4 * (1 if ring == 0 else -1)
+            x = radius * math.cos(angle)
+            y = radius * math.sin(angle) * math.sin(tilt)
+            z = radius * math.sin(angle) * math.cos(tilt)
+            try:
+                n.position = (torso[0] + x, torso[1] + 0.5 + y, torso[2] + z)
+                n.velocity = (0, 0, 0)
+            except Exception:
+                pass
+            hue = (t * 0.15 + i * 0.13) % 1.0
+            l.color = colorsys.hsv_to_rgb(hue, 1.0, 1.0)
+            l.intensity = 0.25 + 0.15 * math.sin(t * 4 + i)
+
+    @effect(repeat_interval=0.07)
+    def _add_toxiccloud(self):
+        """Toxic slime cloud — green poison bubbles and dripping slime."""
+        if not self.is_alive() or not self.node.exists():
+            return
+        pos = self.node.position
+        torso = self.node.torso_position
+        vel = self.node.velocity
+
+        # Slime chunks floating around
+        bs.emitfx(
+            position=torso,
+            velocity=(vel[0] * 0.2 + random.uniform(-1, 1),
+                      vel[1] * 0.2 + random.uniform(0.5, 2),
+                      vel[2] * 0.2 + random.uniform(-1, 1)),
+            count=random.randint(2, 5),
+            scale=random.uniform(0.3, 0.8),
+            spread=0.35,
+            chunk_type='slime',
+        )
+        # Dripping slime on ground
+        bs.emitfx(
+            position=pos,
+            velocity=(0, 0, 0),
+            count=random.randint(1, 3),
+            scale=random.uniform(0.2, 0.5),
+            spread=0.2,
+            chunk_type='slime',
+            emit_type='stickers',
+        )
+        # Toxic smoke
+        if random.random() < 0.3:
+            bs.emitfx(
+                position=torso,
+                velocity=(0, 1, 0),
+                count=2,
+                emit_type='tendrils',
+                tendril_type='thin_smoke',
+            )
+        # Toxic green light
+        if not hasattr(self, '_toxic_light') or not self._toxic_light.exists():
+            self._toxic_light = bs.newnode(
+                'light', owner=self.node,
+                attrs={'color': (0.2, 1.0, 0.1), 'height_attenuated': False,
+                       'radius': 0.55, 'intensity': 0.0},
+            )
+            self.node.connectattr('position', self._toxic_light, 'position')
+            bs.animate(self._toxic_light, 'intensity', {0: 0.1, 0.5: 0.35, 1.0: 0.1}, loop=True)
+
+    @effect(repeat_interval=0.02)
+    def _add_aurora(self):
+        """Aurora borealis — layered colored rings above the player's head."""
+        if not hasattr(self, '_aurora_nodes'):
+            self._aurora_nodes = []
+        if not hasattr(self, '_aurora_tick'):
+            self._aurora_tick = 0
+
+        if not self.is_alive() or not self.node.exists():
+            for loc in getattr(self, '_aurora_nodes', []):
+                if loc.exists(): loc.delete()
+            self._aurora_nodes = []
+            return
+
+        if len(self._aurora_nodes) == 0:
+            for i in range(4):
+                loc = bs.newnode('locator', owner=self.node, attrs={
+                    'shape': 'circleOutline',
+                    'color': (0.0, 1.0, 0.5),
+                    'opacity': 0.8,
+                    'draw_beauty': True,
+                    'additive': True,
+                })
+                self._aurora_nodes.append(loc)
+            if not hasattr(self, '_aurora_light') or not self._aurora_light.exists():
+                self._aurora_light = bs.newnode(
+                    'light', owner=self.node,
+                    attrs={'color': (0.0, 1.0, 0.5), 'height_attenuated': False,
+                           'radius': 0.6, 'intensity': 0.18},
+                )
+                self.node.connectattr('position', self._aurora_light, 'position')
+
+        self._aurora_tick += 1
+        t = bs.time()
+        torso = self.node.torso_position
+
+        for i, loc in enumerate(self._aurora_nodes):
+            phase = i * (math.pi / 2)
+            y_off = 0.85 + i * 0.28 + 0.06 * math.sin(t * 2.0 + phase)
+            size = 0.55 + i * 0.22 + 0.08 * math.sin(t * 1.5 + phase)
+            # Cycle through aurora colors: green → cyan → blue → purple
+            hue = (0.33 + i * 0.1 + t * 0.04) % 1.0
+            r, g, b = colorsys.hsv_to_rgb(hue, 0.85, 1.0)
+            loc.position = (torso[0], torso[1] + y_off, torso[2])
+            loc.color = (r, g, b)
+            loc.size = [size]
+            loc.opacity = 0.6 + 0.2 * math.sin(t * 3 + phase)
+
+        if self._aurora_tick % 8 == 0:
+            bs.emitfx(
+                position=(torso[0], torso[1] + 1.5, torso[2]),
+                velocity=(0, 0.3, 0),
+                count=2, scale=0.15, spread=0.1,
+                emit_type='tendrils', tendril_type='thin_smoke',
+            )
+
+    @effect(repeat_interval=0.04)
+    def _add_bloodmoon(self):
+        """Blood moon — dark crimson drips, red mist and ominous pulsing light."""
+        if not self.is_alive() or not self.node.exists():
+            return
+        torso = self.node.torso_position
+        pos = self.node.position
+        vel = self.node.velocity
+
+        # Blood drips downward
+        bs.emitfx(
+            position=torso,
+            velocity=(vel[0] * 0.1 + random.uniform(-0.5, 0.5),
+                      vel[1] * 0.1 - random.uniform(0.5, 2.0),
+                      vel[2] * 0.1 + random.uniform(-0.5, 0.5)),
+            count=random.randint(2, 5),
+            scale=random.uniform(0.3, 0.7),
+            spread=0.2,
+            chunk_type='slime',
+        )
+        # Blood stain on ground
+        if random.random() < 0.3:
+            bs.emitfx(
+                position=pos,
+                count=2, scale=0.4, spread=0.15,
+                chunk_type='slime', emit_type='stickers',
+            )
+        # Dark red mist
+        if random.random() < 0.2:
+            bs.emitfx(
+                position=torso,
+                velocity=(0, 0.4, 0),
+                count=1, emit_type='tendrils', tendril_type='smoke',
+            )
+        # Pulsing blood light
+        if not hasattr(self, '_bloodmoon_light') or not self._bloodmoon_light.exists():
+            self._bloodmoon_light = bs.newnode(
+                'light', owner=self.node,
+                attrs={'color': (1.0, 0.0, 0.05), 'height_attenuated': False,
+                       'radius': 0.65, 'intensity': 0.0},
+            )
+            self.node.connectattr('position', self._bloodmoon_light, 'position')
+            bs.animate(self._bloodmoon_light, 'intensity',
+                       {0: 0.15, 0.6: 0.55, 1.2: 0.15}, loop=True)
+
+    @effect(repeat_interval=0.02)
+    def _add_demonwings(self):
+        """Dark demon wings — large sweeping dark wings behind the player."""
+        if not hasattr(self, '_demonwings_nodes'):
+            self._demonwings_nodes = []
+        if not hasattr(self, '_demonwings_tick'):
+            self._demonwings_tick = 0
+
+        if not self.is_alive() or not self.node.exists():
+            for n, l, _, _ in getattr(self, '_demonwings_nodes', []):
+                if n.exists(): n.delete()
+                if l.exists(): l.delete()
+            self._demonwings_nodes = []
+            return
+
+        if len(self._demonwings_nodes) == 0:
+            ghost = self._build_ghost_material()
+            for side in (-1, 1):
+                # Outer wing tip
+                for seg in range(2):
+                    n = bs.newnode('prop', owner=self.node, attrs={
+                        'body': 'sphere',
+                        'mesh': bs.getmesh('shield'),
+                        'color_texture': bs.gettexture('powerupCurse'),
+                        'mesh_scale': 0.55 - seg * 0.15,
+                        'body_scale': 0.0,
+                        'shadow_size': 0.0,
+                        'gravity_scale': 0.0,
+                        'materials': ([ghost] if ghost else []),
+                    })
+                    l = bs.newnode('light', owner=n, attrs={
+                        'intensity': 0.3,
+                        'color': (0.7, 0.0, 0.0),
+                        'radius': 0.04,
+                        'volume_intensity_scale': 0.5,
+                    })
+                    n.connectattr('position', l, 'position')
+                    self._demonwings_nodes.append((n, l, side, seg))
+
+                    def _freeze(nn=n):
+                        try:
+                            if not self.is_alive() or not self.node.exists() or not nn.exists():
+                                return
+                            nn.velocity = (0, 0, 0)
+                            bs.timer(0.08, _freeze)
+                        except Exception:
+                            pass
+                    bs.timer(0.08, _freeze)
+
+        self._demonwings_tick += 1
+        t = bs.time()
+        torso = self.node.torso_position
+
+        for n, l, side, seg in self._demonwings_nodes:
+            flap = math.sin(t * 5.0 + seg * 0.5)
+            spread_x = side * (0.55 + seg * 0.45 + 0.2 * abs(flap))
+            pos = (
+                torso[0] + spread_x,
+                torso[1] + 0.35 - seg * 0.2 + 0.08 * flap,
+                torso[2] - 0.4 - seg * 0.25,
+            )
+            try:
+                n.position = pos
+                n.velocity = (0, 0, 0)
+            except Exception:
+                n.position = pos
+            hue = (0.95 + 0.05 * math.sin(t * 2)) % 1.0
+            l.color = colorsys.hsv_to_rgb(hue, 1.0, 0.8)
+            l.intensity = 0.2 + 0.15 * abs(flap)
+
+        # Emit dark sparks from wing tips on flap
+        if self._demonwings_tick % 12 == 0:
+            for side in (-1, 1):
+                bs.emitfx(
+                    position=(torso[0] + side * 1.1, torso[1] + 0.2, torso[2] - 0.7),
+                    velocity=(side * 0.5, -0.5, 0),
+                    count=3, scale=0.3, spread=0.2, chunk_type='spark',
+                )
+
 
 def apply() -> None:
     bascenev1lib.actor.playerspaz.PlayerSpaz = NewPlayerSpaz
