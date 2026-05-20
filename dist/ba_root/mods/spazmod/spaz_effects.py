@@ -171,7 +171,9 @@ class NewPlayerSpaz(PlayerSpaz):
             "blinkinvisible": self._add_blinkinvisible,  # Toggle full-body visibility every 1s
             "randblink": self._add_randblink,  # Randomly hide/show single body parts every 0.7s
             "randomcharacter": self._add_randomcharacter,  # Change character appearance every 5 seconds
-            # ── New effects ──
+            
+        }
+        '''# ── New effects ──
             "inferno": self._add_inferno,        # Raging fire trail with ember sparks
             "ghostly": self._add_ghostly,        # Wispy ghost smoke + pale green glow
             "electric": self._add_electric,      # Crackling electric sparks + lightning flashes
@@ -180,7 +182,7 @@ class NewPlayerSpaz(PlayerSpaz):
             "aurora": self._add_aurora,          # Northern lights colored rings above head
             "bloodmoon": self._add_bloodmoon,    # Crimson drips + red pulsing light
             "demonwings": self._add_demonwings,  # Dark sweeping wings behind player
-        }
+            '''
         for effect in self.effects:
             trigger = self._effect_mappings.get(effect, lambda: None)
             activity = self._activity()
