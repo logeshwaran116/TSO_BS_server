@@ -1020,25 +1020,33 @@ class FlappySpazGame(bs.TeamGameActivity[Player, Team]):
         return super().handlemessage(msg)
 
     def _check_end_game(self) -> None:
-        if self._ended:
+        alive_players = [player for player in self.players if player.alive]
+
+        # Check if all players are dead
+        if len(alive_players) == 0:
+            self.end_game()
             return
 
-        living_team_count = 0
+        # Check if there is only one player left
+        if len(alive_players) == 1:
+            last_player_team = alive_players[0].team
+            other_teams = [team for team in self.teams if team is not last_player_team]
+
+            # Check if player in the team have HIGHER Score than other team
+            if all(last_player_team.score > team.score for team in other_teams):
+                self.end_game()
+                return
+
+        # Check if all Players in A Team DIED
         for team in self.teams:
-            for player in team.players:
-                if player.is_alive():
-                    living_team_count += 1
-                    break
+            if all(not player.alive for player in team.players):
+                other_teams = [t for t in self.teams if t is not team]
+                leading_team = max(other_teams, key=lambda t: t.score)
 
-        # In co-op, go until everyone is dead.
-        # In teams/ffa, go until one team remains.
-        if isinstance(self.session, bs.CoopSession):
-            if living_team_count <= 0:
-                self.end_game()
-        else:
-            if living_team_count <= 1:
-                self.end_game()
-
+                # Check whether the opposing Team that is still ALIVE has a HIGHER Score Than the Team that is DEAD
+                if leading_team.score > team.score:
+                    self.end_game()
+                    return
     # -- End --
 
     @override

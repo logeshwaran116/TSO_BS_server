@@ -294,7 +294,7 @@ def show_effect_list(clientid):
         "slime", "metal", "splinter", "rainbow", "fairydust", "firespark",
         "noeffect", "footprint", "fire", "darkmagic", "darksn", "stars",
         "aure", "orbguard", "chispitas", "surrounderhead",
-        "blinkinvisible", "randblink", "randomcharacter"
+        "randblink", "randomcharacter"
     ]
     # Format the message with effects - 7 per line
     msg = "\ue046______________|AVAILABLE EFFECTS|________________\ue046\n"
