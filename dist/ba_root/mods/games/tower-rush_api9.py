@@ -208,7 +208,7 @@ class BaseRaidGame(ba.TeamGameActivity[Player, Team]):
             self.r_timer.text = "Round Ended"
             self.knock_players()
             self.knocker = ba.Timer(0.3, ba.Call(self.knock_players), repeat=True)
-            ba.timer(1, lambda: self.selection())
+            ba.timer(0.2, lambda: self.selection())
 
     def get_pos(self, player: Player, center: bool = False) -> None:
 
@@ -257,7 +257,7 @@ class BaseRaidGame(ba.TeamGameActivity[Player, Team]):
                                       "Team " + t.name.evaluate() + " is about to take their turn.",
                                       color=(0.5, 0.8, 0.8))
                             break
-            ba.timer(0.926, func)
+            ba.timer(0.4, func)
 
         def scene_2():
             for t in self.teams:
@@ -279,8 +279,8 @@ class BaseRaidGame(ba.TeamGameActivity[Player, Team]):
             self.r_timer.text = "Round Time: " + str(self.time)
             self.disable_controls = False
             def a(): self.knocker = None
-            ba.timer(0.9, a)
-            ba.timer(0.488 if first_run else 0.67, delay)
+            ba.timer(0.5, a)
+            ba.timer(0.3 if first_run else 0.4, delay)
 
             self.time = self.get_s['Countdown Time Each Round']
             self.loop_timer = ba.Timer(1, ba.Call(self.decrease), repeat=True)
