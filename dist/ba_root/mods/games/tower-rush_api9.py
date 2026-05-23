@@ -207,7 +207,7 @@ class BaseRaidGame(ba.TeamGameActivity[Player, Team]):
             self.disable_controls = True
             self.r_timer.text = "Round Ended"
             self.knock_players()
-            self.knocker = ba.Timer(0.8, ba.Call(self.knock_players), repeat=True)
+            self.knocker = ba.Timer(0.3, ba.Call(self.knock_players), repeat=True)
             ba.timer(1, lambda: self.selection())
 
     def get_pos(self, player: Player, center: bool = False) -> None:
