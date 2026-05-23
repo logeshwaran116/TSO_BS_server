@@ -1956,8 +1956,17 @@ def remove_custom_effect(arguments):
         return
 
 
+VALID_EFFECTS = ['aure', 'aurora', 'blinkinvisible', 'bloodmoon', 'chispitas', 'darkmagic', 'darksn', 'demonwings', 'distortion', 'electric', 'fairydust', 'fire', 'firespark', 'footprint', 'galaxy', 'ghostly', 'glow', 'highlightshine', 'ice', 'iceground', 'iceman', 'inferno', 'metal', 'orbguard', 'rainbow', 'randblink', 'randomcharacter', 'scorch', 'shine', 'slime', 'spark', 'sparkground', 'splinter', 'stars', 'surrounderhead', 'sweat', 'sweatground', 'toxiccloud', 'nebulashards', 'thunderaura', 'voidrift', 'crystalwings', 'premiumhalo', 'solarcrown', 'pet', 'minipet']
+
 def set_custom_effect(arguments):
     try:
+        effect_name = arguments[0]
+        # Validate effect name
+        if effect_name not in VALID_EFFECTS:
+            bs.chatmessage(
+                f"❌ Unknown effect '{effect_name}'."
+            )
+            return
         session = bs.get_foreground_host_session()
         for i in session.sessionplayers:
             if i.inputdevice.client_id == int(arguments[1]):
@@ -1966,23 +1975,21 @@ def set_custom_effect(arguments):
                 effs = custom.get('customeffects', {}).get(acc, [])
                 if isinstance(effs, str):
                     effs = [effs]
-                # Validate before adding
-                if arguments[0] in effs:
+                if effect_name in effs:
                     try:
-                        bs.chatmessage(f"Effect '{arguments[0]}' is already applied to {i.getname(full=True, icon=True)}")
+                        bs.chatmessage(f"⚠️ Effect '{effect_name}' is already applied to {i.getname(full=True, icon=True)}")
                     except Exception:
                         pass
                     return
                 if len(effs) >= 2:
                     try:
-                        bs.chatmessage(f"Max 2 effects allowed; '{arguments[0]}' not added for {i.getname(full=True, icon=True)}")
+                        bs.chatmessage(f"⚠️ Max 2 effects allowed; '{effect_name}' not added for {i.getname(full=True, icon=True)}")
                     except Exception:
                         pass
                     return
-                # Add effect
-                pdata.set_effect(arguments[0], acc)
+                pdata.set_effect(effect_name, acc)
                 try:
-                    bs.chatmessage(f"Effect '{arguments[0]}' added to {i.getname(full=True, icon=True)}")
+                    bs.chatmessage(f"✅ Effect '{effect_name}' added to {i.getname(full=True, icon=True)}")
                 except Exception:
                     pass
     except:
