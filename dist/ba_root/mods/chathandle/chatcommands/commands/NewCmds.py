@@ -228,13 +228,13 @@ def boxall(arguments, clientid):
     try:
         for i in activity.players:
             try:
-                i.actor.node.torso_model = bs.getmodel("tnt");
-                i.actor.node.color_mask_texture = bs.gettexture("tnt");
+                i.actor.node.torso_model = bs.getmodel("tnt")
+                i.actor.node.color_mask_texture = bs.gettexture("tnt")
                 i.actor.node.color_texture = bs.gettexture("tnt")
-                i.actor.node.highlight = (1,1,1);
-                i.actor.node.color = (1,1,1);
-                i.actor.node.head_model = None;
-                i.actor.node.style = "cyborg";
+                i.actor.node.highlight = (1,1,1)
+                i.actor.node.color = (1,1,1)
+                i.actor.node.head_model = None
+                i.actor.node.style = "cyborg"
             except:
                 pass
     except:

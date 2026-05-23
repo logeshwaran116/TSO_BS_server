@@ -168,18 +168,18 @@ class NewPlayerSpaz(PlayerSpaz):
             "surrounderhead": self._add_surrounderhead,  # Added new effect
             "pet": self._create_pet,  # Mini cosmetic character follower
             "minipet": self._create_pet,  # Alias for mini character pet
-            "blinkinvisible": self._add_blinkinvisible,  # Toggle full-body visibility every 1s
+            #"blinkinvisible": self._add_blinkinvisible,  # Toggle full-body visibility every 1s
             "randblink": self._add_randblink,  # Randomly hide/show single body parts every 0.7s
             "randomcharacter": self._add_randomcharacter,  # Change character appearance every 5 seconds
             # ── New effects ──
-            "inferno": self._add_inferno,        # Raging fire trail with ember sparks
-            "ghostly": self._add_ghostly,        # Wispy ghost smoke + pale green glow
-            "electric": self._add_electric,      # Crackling electric sparks + lightning flashes
+            #"inferno": self._add_inferno,        # Raging fire trail with ember sparks
+            #"ghostly": self._add_ghostly,        # Wispy ghost smoke + pale green glow
+            #"electric": self._add_electric,      # Crackling electric sparks + lightning flashes
             "galaxy": self._add_galaxy,          # Star nodes orbiting in two interlocked rings
-            "toxiccloud": self._add_toxiccloud,  # Green poison slime cloud
+            #"toxiccloud": self._add_toxiccloud,  # Green poison slime cloud
             "aurora": self._add_aurora,          # Northern lights colored rings above head
-            "bloodmoon": self._add_bloodmoon,    # Crimson drips + red pulsing light
-            "demonwings": self._add_demonwings,  # Dark sweeping wings behind player
+            #"bloodmoon": self._add_bloodmoon,    # Crimson drips + red pulsing light
+            #"demonwings": self._add_demonwings,  # Dark sweeping wings behind player
         }
         for effect in self.effects:
             trigger = self._effect_mappings.get(effect, lambda: None)

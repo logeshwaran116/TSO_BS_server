@@ -1956,7 +1956,7 @@ def remove_custom_effect(arguments):
         return
 
 
-VALID_EFFECTS = ['aure', 'aurora', 'blinkinvisible', 'bloodmoon', 'chispitas', 'darkmagic', 'darksn', 'demonwings', 'distortion', 'electric', 'fairydust', 'fire', 'firespark', 'footprint', 'galaxy', 'ghostly', 'glow', 'highlightshine', 'ice', 'iceground', 'iceman', 'inferno', 'metal', 'orbguard', 'rainbow', 'randblink', 'randomcharacter', 'scorch', 'shine', 'slime', 'spark', 'sparkground', 'splinter', 'stars', 'surrounderhead', 'sweat', 'sweatground', 'toxiccloud', 'nebulashards', 'thunderaura', 'voidrift', 'crystalwings', 'premiumhalo', 'solarcrown', 'pet', 'minipet']
+VALID_EFFECTS = ['aure', 'aurora', 'chispitas', 'darkmagic', 'darksn', 'distortion', 'fairydust', 'fire', 'firespark', 'footprint', 'galaxy', 'glow', 'highlightshine', 'ice', 'iceground', 'iceman', 'metal', 'orbguard', 'rainbow', 'randblink', 'randomcharacter', 'scorch', 'shine', 'slime', 'spark', 'sparkground', 'splinter', 'stars', 'surrounderhead', 'sweat', 'sweatground', 'nebulashards', 'thunderaura', 'voidrift', 'crystalwings', 'premiumhalo', 'solarcrown', 'pet', 'minipet']
 
 def set_custom_effect(arguments):
     try:

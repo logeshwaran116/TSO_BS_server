@@ -166,7 +166,7 @@ class BaseRaidGame(ba.TeamGameActivity[Player, Team]):
                            'scale': 0.8,
                            'text': "..."})
         self.setup_standard_time_limit(self._time_limit)
-        ba.timer(4.5, ba.WeakCall(self.selection, first_run = True))
+        ba.timer(0.5, ba.WeakCall(self.selection, first_run = True))
         teams = []
         for t in self.teams:
             teams.append(t)
@@ -295,9 +295,9 @@ class BaseRaidGame(ba.TeamGameActivity[Player, Team]):
                                   )
                         break
 
-        ba.timer(1.033, text)
-        ba.timer(2, scene)
-        ba.timer(4.858 if not first_run else 3, scene_2)
+        ba.timer(0.2, text)
+        ba.timer(0.2, scene)
+        ba.timer(0.5 if not first_run else 1, scene_2)
 
     def spawn_player(self, player: Player) -> ba.Actor:
         spaz = self.spawn_player_spaz(player, position=self.get_pos(player))
