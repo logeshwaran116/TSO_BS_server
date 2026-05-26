@@ -5,9 +5,49 @@ from stats import mystats
 import babase
 import bascenev1 as bs
 import math
+from _bascenev1 import get_client_ping as _get_ping
 
 sett = setting.get_settings_data()
 
+
+# -------------------- PING SYSTEM --------------------
+
+class PingDisplay:
+    def __init__(self, owner, player):
+        self.node = owner
+        try:
+            self.client_id = player.sessionplayer.inputdevice.client_id
+        except Exception:
+            self.client_id = None
+
+        m = bs.newnode('math', owner=self.node,
+                       attrs={'input1': (0, -1.0, 0), 'operation': 'add'})
+        self.node.connectattr('torso_position', m, 'input2')
+
+        self.txt = bs.newnode('text', owner=self.node, attrs={
+            'text': '',
+            'in_world': True,
+            'shadow': 1.0,
+            'flatness': 1.0,
+            'scale': 0.009,
+            'h_align': 'center'
+        })
+        m.connectattr('output', self.txt, 'position')
+        self._update()
+
+    def _update(self):
+        if not self.node.exists(): return
+        try:
+            ping = _get_ping(self.client_id) if self.client_id is not None else 0
+        except Exception: ping = 0
+
+        if ping < 80: col = (0, 1, 0)
+        elif ping < 150: col = (1, 1, 0)
+        else: col = (1, 0, 0)
+
+        self.txt.text = f"{ping} ms"
+        self.txt.color = col
+        bs.timer(1.0, self._update)
 
 def addtag(node, player):
     session_player = player.sessionplayer
@@ -35,6 +75,7 @@ def addtag(node, player):
 
     if tag:
         Tag(node, tag, col)
+    PingDisplay(node, player)
 
 
 def addrank(node, player):
