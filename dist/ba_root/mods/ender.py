@@ -1,3 +1,4 @@
+# ba_meta require api 9
 # Copyright 2025 - Mod Created by BrotherBoard
 # Modified with extra skills & all-map support
 # Added by Sara
@@ -23,6 +24,7 @@ from babase import (
     get_string_width as gsw,
     Plugin
 )
+import babase
 import bascenev1 as bs
 from bascenev1 import (
     get_foreground_host_activity as ga,
@@ -354,7 +356,6 @@ class Ender(Bot):
             'Ippo nee escape aaga mudiyadhu'
         ]
 
-
     def _say(s, message: str):
         """Handles speaking with a cooldown to prevent spam."""
         now = time()
@@ -600,7 +601,6 @@ TEX = lambda o,**k: newnode(
     }
 )
 
-# ba_meta require api 9
 # Keep track of all Ender bots we spawn
 ender_instances = []
 ENABLE_GLOVES = True
@@ -640,14 +640,54 @@ def check_player_count():
         print(f"[EnderBot] Error in check_player_count: {e}")
 
 
-def auto_manage_ender():
-    """Continuously check player count every 2 seconds."""
-    timer(0.5, auto_manage_ender)  # keep repeating
-    check_player_count()
+def check_player_count():
+    """Spawn 1 Ender bot only when exactly 1 real player is in-game."""
+    global ender_instances
+    try:
+        activity = get_foreground_host_activity()
+        if not activity:
+            return
+        if not isinstance(activity, bs.GameActivity):
+            return
+        if not activity.has_begun() or activity.has_ended():
+            return
 
-def enable():
-    """Enable the mod and set up auto Ender management."""
-    activity = get_foreground_host_activity()
-    if activity and isinstance(activity.session, (bs.FreeForAllSession, bs.DualTeamSession, bs.CoopSession)):
-        with activity.context:
-            auto_manage_ender()
+        session = bs.get_foreground_host_session()
+        if not isinstance(session, (bs.FreeForAllSession, bs.DualTeamSession)):
+            return
+
+        real_players = [
+            sp for sp in session.sessionplayers
+            if sp.getname() not in ('<in-lobby>', None, '')
+        ]
+
+        # Remove dead bots
+        ender_instances = [b for b in ender_instances if b.node.exists()]
+        current_bots = len(ender_instances)
+
+        if len(real_players) <= 1:
+            if current_bots < 1:
+                print('[EnderBot] Spawning bot...')
+                with activity.context:
+                    ender_instances.append(Ender(name=BOTNAME))
+        else:
+            # Enough players — remove bots
+            for bot in ender_instances:
+                try:
+                    if bot.node.exists():
+                        bot.node.delete()
+                except Exception:
+                    pass
+            ender_instances.clear()
+
+    except Exception as e:
+        print(f'[EnderBot] Error: {e}')
+
+
+# ba_meta export babase.Plugin
+class EnderPlugin(babase.Plugin):
+
+    def on_app_running(self) -> None:
+        global _ender_timer
+        _ender_timer = babase.AppTimer(3.0, check_player_count, repeat=True)
+        print('[EnderBot] Plugin active — checking every 3s.')
