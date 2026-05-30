@@ -41,13 +41,14 @@ class PingDisplay:
             ping = _get_ping(self.client_id) if self.client_id is not None else 0
         except Exception: ping = 0
 
-        if ping < 80: col = (0, 1, 0)
-        elif ping < 150: col = (1, 1, 0)
-        else: col = (1, 0, 0)
+        if isinstance(ping, (float, int)):
+            if ping < 80: col = (0, 1, 0)
+            elif ping < 150: col = (1, 1, 0)
+            else: col = (1, 0, 0)
 
-        self.txt.text = f"{ping} ms"
-        self.txt.color = col
-        bs.timer(1.0, self._update)
+            self.txt.text = f"{ping} ms"
+            self.txt.color = col
+            bs.timer(1.0, self._update)
 
 def addtag(node, player):
     session_player = player.sessionplayer

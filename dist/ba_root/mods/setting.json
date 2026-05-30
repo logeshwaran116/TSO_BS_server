@@ -142,7 +142,7 @@
     "mikirogQuickTurn": {
         "enable": false
     },
-    "minAgeToChatInHours": 78,
+    "minAgeToChatInHours": 24,
     "minAgeToJoinInHours": 24,
     "newResultBoard": true,
     "playermod": {
