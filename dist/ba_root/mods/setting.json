@@ -62,6 +62,7 @@
     "discordbot": {
         "enable": true,
         "liveChat": true,
+        "leaderboardChannelID": 1510530366035853372,
         "liveStatsChannelID": 1468885998472794214,
         "logsChannelID": 1468886074808991784,
         "directCmdChannelID": 1468886329193660558,

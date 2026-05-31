@@ -25,11 +25,18 @@ from datetime import datetime, timezone
 import sys
 import os
 
+
+import setting
+data = setting.get_settings_data()
+db = data.get("discordbot", {})
+LEADERBOARD_CHANNEL_ID = db.get("leaderboardChannelID",None)
+
+
+
 # ── CONFIG ──────────────────────────────────────────────────
-LEADERBOARD_CHANNEL_ID = 1502641543193038848  # ← change to your leaderboard channel
-UPDATE_INTERVAL        = 1    # minutes between auto-updates
+UPDATE_INTERVAL        = 5    # minutes between auto-updates
 TOP_N                  = 10    # how many players per category
-MIN_GAMES_FOR_KD       = 10    # minimum games to appear in K/D board
+MIN_GAMES_FOR_KD       = 50    # minimum games to appear in K/D board
 # ────────────────────────────────────────────────────────────
 
 # Add mods path so we can import stats/pdata
@@ -94,7 +101,7 @@ def build_leaderboard_embed(import_discord: object) -> object:
         timestamp=datetime.now(timezone.utc)
     )
     embed.set_footer(
-        text=f'Updates Every {UPDATE_INTERVAL} minute{"s" if UPDATE_INTERVAL > 1 else ""}',
+        text=f'Auto Updates Every {UPDATE_INTERVAL} minute{"s" if UPDATE_INTERVAL > 1 else ""} | Last updated at',
         icon_url = "https://upload.wikimedia.org/wikipedia/commons/3/3a/Gray_circles_rotate.gif?_=20110906194014"
     )
 
@@ -225,7 +232,6 @@ async def run_leaderboard_loop(client: object, discord: object) -> None:
                 break
 
 
-    print('[leaderboard] Loop started.')
 
     while not client.is_closed():
         try:
