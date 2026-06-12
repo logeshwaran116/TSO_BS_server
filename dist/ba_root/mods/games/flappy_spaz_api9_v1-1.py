@@ -153,10 +153,7 @@ class FlappySpazMap(bs.Map):
         self.is_flying = True
 
 
-try:
-    bs.register_map(FlappySpazMap)
-except RuntimeError:
-    pass
+bs.register_map(FlappySpazMap)
 
 
 # ---------------------------------------------------------------------------
@@ -1012,41 +1009,49 @@ class FlappySpazGame(bs.TeamGameActivity[Player, Team]):
             # No respawn — once you're dead, you're out.
             # In co-op, end the instant everyone dies.
             # In teams/ffa, allow a 1-second fudge for simultaneous deaths.
-            if isinstance(self.session, bs.CoopSession):
-                bs.pushcall(self._check_end_game)
-            else:
-                bs.timer(1.0, self._check_end_game)
+            bs.pushcall(self._check_end_game)
             return None
         return super().handlemessage(msg)
 
     def _check_end_game(self) -> None:
-        alive_players = [player for player in self.players if player.alive]
+        if self._ended:
+            return
 
-        # Check if all players are dead
-        if len(alive_players) == 0:
+        living_teams: list = []
+        for team in self.teams:
+            for player in team.players:
+                if player.is_alive():
+                    living_teams.append(team)
+                    break
+
+        living_team_count = len(living_teams)
+
+        # Co-op: end when everyone is dead.
+        if isinstance(self.session, bs.CoopSession):
+            if living_team_count <= 0:
+                self.end_game()
+            return
+
+        # Teams/FFA: end when 0 or 1 team remains alive.
+        if living_team_count <= 0:
             self.end_game()
             return
 
-        # Check if there is only one player left
-        if len(alive_players) == 1:
-            last_player_team = alive_players[0].team
-            other_teams = [team for team in self.teams if team is not last_player_team]
-
-            # Check if player in the team have HIGHER Score than other team
-            if all(last_player_team.score > team.score for team in other_teams):
+        if living_team_count == 1:
+            # One team left alive — check if they already have the
+            # highest score among all teams. If yes, end now.
+            # If tied, keep going so they can extend their lead.
+            survivor = living_teams[0]
+            max_dead_score = max(
+                (t.score for t in self.teams if t is not survivor),
+                default=-1,
+            )
+            if survivor.score > max_dead_score:
                 self.end_game()
-                return
+            else:
+                # Tied or behind — let survivor keep playing to break tie.
+                pass
 
-        # Check if all Players in A Team DIED
-        for team in self.teams:
-            if all(not player.alive for player in team.players):
-                other_teams = [t for t in self.teams if t is not team]
-                leading_team = max(other_teams, key=lambda t: t.score)
-
-                # Check whether the opposing Team that is still ALIVE has a HIGHER Score Than the Team that is DEAD
-                if leading_team.score > team.score:
-                    self.end_game()
-                    return
     # -- End --
 
     @override

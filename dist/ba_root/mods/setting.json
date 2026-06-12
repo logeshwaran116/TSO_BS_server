@@ -137,13 +137,13 @@
         "barsBehindName": true,
         "enable": true
     },
-    "maxAccountPerIP": 1,
-    "maxPlayersPerDevice": 1,
+    "maxAccountPerIP": 2,
+    "maxPlayersPerDevice": 2,
     "maxWarnCount": 2,
     "mikirogQuickTurn": {
         "enable": false
     },
-    "minAgeToChatInHours": 78,
+    "minAgeToChatInHours": 24,
     "minAgeToJoinInHours": 24,
     "newResultBoard": true,
     "playermod": {
@@ -194,7 +194,7 @@
             ],
             "randomColor": true
         },
-        "top watermark": "\u2694\ufe0f\u300e\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u300f\u2694\ufe0f \ud83d\udc51  \u1d1b\u1d00\u1d0d\u026a\u029f \u1d07\u1d18\u026a\u1d04 \ua731\u1d07\u0280\u1d20\u1d07\u0280  \ud83d\udc51 \u2694\ufe0f\u300e\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u300f\u2694\ufe0f"
+        "top watermark": "⚔️『━━━━━━━━━━━━━━』⚔️ 👑 ᴛᴀᴍɪʟ sᴇʀᴠᴇʀ ᴏғғɪᴄɪᴀʟ 👑 ⚔️『━━━━━━━━━━━━━━』⚔️"
     },
     "useV2Account": false,
     "warnMsg": "WARNING !!!",

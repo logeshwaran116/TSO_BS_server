@@ -98,13 +98,13 @@ class textonmap:
         # Second text node with special characters
         node = bs.newnode('text',
                           attrs={
-                              'text': u'\ue043[\U0001F451] OWNER : : SANJI\n\ue048[\U0001F6E0] MANAGED BY : TSO',
+                              'text': u'\ue043[\U0001F451] OWNER : SANJI',
                               'flatness': 1.0,
                               'h_align': 'left',
                               'v_attach': 'bottom',
                               'h_attach': 'left',
                               'scale': 0.7,
-                              'position': (25, 40),
+                              'position': (25, 30),
                               'color': (1, 1, 1)
                           })
 
