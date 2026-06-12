@@ -152,8 +152,10 @@ class FlappySpazMap(bs.Map):
         gnode.vr_near_clip = 1.0
         self.is_flying = True
 
-
-bs.register_map(FlappySpazMap)
+try:
+    bs.register_map(FlappySpazMap)
+except:
+    pass
 
 
 # ---------------------------------------------------------------------------
