@@ -84,6 +84,7 @@ COMPLAINT_STAFF_ROLE_ID = 1468270279716245709
 CHATLIST_CHANNEL_ID = 0
 
 liveChat = True
+errorLogs = True
 token = ''
 logs = []
 _logs_lock = Lock()
@@ -150,8 +151,11 @@ def push_log(msg):
     with _logs_lock:
         logs.append(msg)
 
-def push_error_log(msg: str):
-    """Queue an error/warning message to send to Discord."""
+def push_error_log(msg):
+    if not errorLogs:
+        return
+    if 'WARNING' in msg:  # ← skip warnings
+        return
     global _error_logs
     with _error_logs_lock:
         _error_logs.append(msg)
