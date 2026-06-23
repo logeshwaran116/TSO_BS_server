@@ -848,9 +848,8 @@ class NewPlayerSpaz(PlayerSpaz):
                                    'radius': 0.035,
                                })
             node.connectattr('position', light, 'position')
-            # Safe delete
-            bs.timer(0.25, bs.Call(lambda n: n.delete() if n.exists() else None, node))
-            bs.timer(0.25, bs.Call(lambda l: l.delete() if l.exists() else None, light))
+            bs.timer(0.25, bs.Call(node.delete))
+            bs.timer(0.25, bs.Call(light.delete))
 
     @effect(repeat_interval=0.1)
     def _add_chispitas(self):
