@@ -87,7 +87,10 @@ liveChat = True
 token = ''
 logs = []
 _logs_lock = Lock()
+_error_logs = []
+_error_logs_lock = Lock()  
 _send_logs_running = False
+_send_error_logs_running = False
 _refresh_stats_task = None
 _send_logs_task = None
 _send_error_logs_task = None
@@ -101,7 +104,7 @@ MAX_CHAT_MESSAGES = 40
 
 # Command prefix for Discord bot
 DISCORD_COMMAND_PREFIX = 't?'
-ROLE_COMMAND_PREFIX = 'r?'
+ROLE_COMMAND_PREFIX = 'tr?'
 
 # JSON file for storing allowed users
 ALLOWED_USERS_FILE = 'allowed_users.json'
