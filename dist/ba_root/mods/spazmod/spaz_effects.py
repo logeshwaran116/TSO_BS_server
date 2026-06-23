@@ -823,7 +823,7 @@ class NewPlayerSpaz(PlayerSpaz):
             node = bs.newnode('prop',
                               owner=self.node,
                               attrs={
-                                  'body': 'sphere',
+                                  'body': 'empty',
                                   'position': pos,
                                   'velocity': vel,
                                   'mesh': mesh,
@@ -834,6 +834,7 @@ class NewPlayerSpaz(PlayerSpaz):
                                   'color_texture': tex,
                                   'reflection': 'soft',
                                   'reflection_scale': [1.5],
+                                  'lifespan': 250,
                               })
             light = bs.newnode('light',
                                owner=node,
