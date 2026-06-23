@@ -823,7 +823,7 @@ class NewPlayerSpaz(PlayerSpaz):
             node = bs.newnode('prop',
                               owner=self.node,
                               attrs={
-                                  'body': 'empty',
+                                  'body': 'sphere',
                                   'position': pos,
                                   'velocity': vel,
                                   'mesh': mesh,
@@ -834,7 +834,6 @@ class NewPlayerSpaz(PlayerSpaz):
                                   'color_texture': tex,
                                   'reflection': 'soft',
                                   'reflection_scale': [1.5],
-                                  'lifespan': 250,
                               })
             light = bs.newnode('light',
                                owner=node,
@@ -849,8 +848,9 @@ class NewPlayerSpaz(PlayerSpaz):
                                    'radius': 0.035,
                                })
             node.connectattr('position', light, 'position')
-            bs.timer(0.25, bs.Call(node.delete))
-            bs.timer(0.25, bs.Call(light.delete))
+            # Safe delete
+            bs.timer(0.25, bs.Call(lambda n: n.delete() if n.exists() else None, node))
+            bs.timer(0.25, bs.Call(lambda l: l.delete() if l.exists() else None, light))
 
     @effect(repeat_interval=0.1)
     def _add_chispitas(self):
