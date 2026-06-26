@@ -156,6 +156,8 @@ def push_error_log(msg):
         return
     if 'WARNING' in msg:  # ← skip warnings
         return
+    if 'owner' in msg:
+        return
     global _error_logs
     with _error_logs_lock:
         _error_logs.append(msg)
