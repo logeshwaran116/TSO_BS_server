@@ -713,7 +713,95 @@ async def handle_discord_command(message):
     except Exception as e:
         await message.channel.send(f"Error executing command `{command}`: {str(e)}")
 
+def _parse_log_line(line: str) -> str:
+    """
+    Convert:  2026-07-07 16:11:35 + : pb-IF4...
+    To:       2026-07-07 16:11:35 | pb-IF4...
+    """
+    # Split on ' + : ' and rejoin with ' | '
+    if ' + : ' in line:
+        timestamp, rest = line.split(' + : ', 1)
+        return f"➤ {timestamp} | {rest}"
+    return line  # return as-is if format doesn't match
 
+
+async def handle_serverchat_command(message, arguments):
+    """Show whole server chat by message count or day
+    Usage from Discord 
+    t?serverchat day/msg [count]
+    
+    Example:
+    t?serverchat day 7 -> last 7 days chat
+    t?serverchat msg 100 -> last 100 messages
+    created by sanji"""
+    server = babase.app.classic.server._config.party_name
+    if not server:
+        server = 'Unknown'
+
+    if not arguments:
+        await message.channel.send("usage: t?serverchat day/msg [count]")
+        return
+    arg = arguments[0]
+    if arg not in ['msg', 'msgs','message', 'messages', 'days','day']:
+        return await message.channel.send("Invalid argument: Usage: t?serverchat day/msg [count]")
+
+    if arguments [1] and not isinstance(int, int(arguments[2])):
+        return await message.channel.send("Invalid argument: The count must be a number")
+
+    # Locate chat log file; reuse same path logic as in normal_commands.chatlist_command.
+    try:
+        base = _babase.env().get('python_directory_user')
+        if not base:
+            raise RuntimeError("python_directory_user not set")
+        log_path = os.path.join(base, 'serverdata', 'Chat Logs.log')
+    except Exception as exc:
+        await message.channel.send(f"Could not locate chat log file: `{exc}`")
+        return
+
+    if not os.path.exists(log_path):
+        await message.channel.send("Chat log file not found on server.")
+        return
+
+    try:
+        with open(log_path, 'r', encoding='utf-8', errors='ignore') as f:
+            lines = f.readlines()
+    except Exception as exc:
+        await message.channel.send(f"Failed to read chat log: `{exc}`")
+        return
+    
+    # ── filter lines ──────────────────────────
+ 
+    if arg in ('msg', 'msgs', 'message', 'messages'):
+        count = max(1, min(count, 1000))           # clamp 1–1000
+        selected = lines[-count:]
+        lines = [_parse_log_line(l.rstrip('\n')) for l in selected if l.strip()]
+        title    = f"💬 Last {len(selected)} Messages of {server}"
+ 
+    else:  # day / days
+        count    = max(1, min(count, 10))          # clamp 1–7
+        cutoff   = datetime.datetime.now() - datetime.timedelta(days=count)
+        selected = []
+ 
+        for line in lines:
+            # Expected log format: [YYYY-MM-DD HH:MM:SS] ...
+            # Falls back to including all lines if timestamp can't be parsed.
+            try:
+                ts_str  = line[1:20]               # "[2025-07-09 14:32:00]"
+                ts      = datetime.strptime(ts_str, "%Y-%m-%d %H:%M:%S")
+                if ts >= cutoff:
+                    selected.append(line)
+            except (ValueError, IndexError):
+                selected.append(line)              # keep lines we can't parse
+        lines = [_parse_log_line(l.rstrip('\n')) for l in selected if l.strip()]
+        title = f"💬 Chat from the Last {count} Day{'s' if count != 1 else ''} in {server}"
+ 
+    if not selected:
+        await message.channel.send("No messages found for that range.")
+        return
+    view = ChatPaginatorView(lines=selected, title=title, author=message.author)
+    sent = await message.channel.send(embed=view._build_embed(), view=view)
+    view.message = sent 
+    
 async def handle_chatlist_command(message, arguments):
     """Show a player's recent chat from server chat logs.
 
@@ -2179,3 +2267,132 @@ class BsDataCollector:
 class BsDataThread:
     def __init__(self):
         self.collector = BsDataCollector()
+
+
+ 
+# ─────────────────────────────────────────────
+#  Paginator View
+# ─────────────────────────────────────────────
+ 
+class ChatPaginatorView(discord.ui.View):
+    """
+    Paginated viewer for server chat logs.
+    Buttons: |◀◀  ◀  [jump]  ▶  ▶▶|
+    Times out after 3 minutes of inactivity.
+    """
+ 
+    PER_PAGE = 15
+ 
+    def __init__(self, lines: list[str], title: str, author: discord.User | discord.Member):
+        super().__init__(timeout=180)
+        self.lines   = lines
+        self.title   = title
+        self.author  = author
+        self.page    = 0
+        self.total   = max(1, (len(lines) + self.PER_PAGE - 1) // self.PER_PAGE)
+ 
+        self._sync_buttons()
+ 
+    # ── helpers ──────────────────────────────
+ 
+    def _sync_buttons(self):
+        """Disable first/prev on page 0; disable next/last on final page."""
+        self.btn_first.disabled = self.page == 0
+        self.btn_prev.disabled  = self.page == 0
+        self.btn_next.disabled  = self.page == self.total - 1
+        self.btn_last.disabled  = self.page == self.total - 1
+ 
+    def _build_embed(self) -> discord.Embed:
+        start = self.page * self.PER_PAGE
+        chunk = self.lines[start : start + self.PER_PAGE]
+ 
+        embed = discord.Embed(
+            title       = self.title,
+            description = "\n".join(chunk) or "*(no messages)*",
+            color       = discord.Color.from_str("#FF4444"),
+        )
+        embed.set_footer(text=f"📄 Page {self.page + 1}/{self.total}  •  {len(self.lines)} messages total")
+        return embed
+ 
+    # ── interaction guard ─────────────────────
+ 
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user.id != self.author.id:
+            await interaction.response.send_message(
+                "Only the person who ran the command can use these buttons.", ephemeral=True
+            )
+            return False
+        return True
+ 
+    # ── buttons ───────────────────────────────
+ 
+    @discord.ui.button(emoji="⏮️", style=discord.ButtonStyle.gray)
+    async def btn_first(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.page = 0
+        self._sync_buttons()
+        await interaction.response.edit_message(embed=self._build_embed(), view=self)
+ 
+    @discord.ui.button(emoji="◀️", style=discord.ButtonStyle.primary)
+    async def btn_prev(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.page -= 1
+        self._sync_buttons()
+        await interaction.response.edit_message(embed=self._build_embed(), view=self)
+ 
+    @discord.ui.button(emoji="🔢", style=discord.ButtonStyle.danger, label=None)
+    async def btn_jump(self, interaction: discord.Interaction, button: discord.ui.Button):
+        """Open a modal so the user can type a page number."""
+        await interaction.response.send_modal(JumpModal(self))
+ 
+    @discord.ui.button(emoji="▶️", style=discord.ButtonStyle.primary)
+    async def btn_next(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.page += 1
+        self._sync_buttons()
+        await interaction.response.edit_message(embed=self._build_embed(), view=self)
+ 
+    @discord.ui.button(emoji="⏭️", style=discord.ButtonStyle.gray)
+    async def btn_last(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.page = self.total - 1
+        self._sync_buttons()
+        await interaction.response.edit_message(embed=self._build_embed(), view=self)
+ 
+    # ── timeout ───────────────────────────────
+ 
+    async def on_timeout(self):
+        for item in self.children:
+            item.disabled = True
+        # message ref is stored after sending (see send_paginator helper)
+        if hasattr(self, "message") and self.message:
+            try:
+                await self.message.edit(view=self)
+            except discord.HTTPException:
+                pass
+ 
+ 
+class JumpModal(discord.ui.Modal, title="Jump to page"):
+    page_input = discord.ui.TextInput(
+        label       = "Page number",
+        placeholder = "Enter a page number…",
+        min_length  = 1,
+        max_length  = 4,
+    )
+ 
+    def __init__(self, paginator: ChatPaginatorView):
+        super().__init__()
+        self.paginator = paginator
+ 
+    async def on_submit(self, interaction: discord.Interaction):
+        try:
+            target = int(self.page_input.value) - 1          # convert to 0-indexed
+            if not (0 <= target < self.paginator.total):
+                raise ValueError
+        except ValueError:
+            await interaction.response.send_message(
+                f"Enter a number between 1 and {self.paginator.total}.", ephemeral=True
+            )
+            return
+ 
+        self.paginator.page = target
+        self.paginator._sync_buttons()
+        await interaction.response.edit_message(
+            embed=self.paginator._build_embed(), view=self.paginator
+        )
