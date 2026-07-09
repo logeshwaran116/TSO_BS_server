@@ -633,6 +633,10 @@ async def handle_discord_command(message):
         await handle_chatlist_command(message, arguments)
         return
 
+    if command == 'serverchat':
+        await handle_serverchat_command(message, arguments)
+        return
+    
     # === Moderation lists + pb-id actions (Discord UI) ===
     if command == 'banlist':
         await handle_banlist_command(message)
@@ -801,7 +805,7 @@ async def handle_serverchat_command(message, arguments):
     view = ChatPaginatorView(lines=selected, title=title, author=message.author)
     sent = await message.channel.send(embed=view._build_embed(), view=view)
     view.message = sent 
-    
+
 async def handle_chatlist_command(message, arguments):
     """Show a player's recent chat from server chat logs.
 
