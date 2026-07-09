@@ -745,12 +745,17 @@ async def handle_serverchat_command(message, arguments):
     if not arguments:
         await message.channel.send("usage: t?serverchat day/msg [count]")
         return
-    arg = arguments[0]
+    arg = arguments[0].lower()
     if arg not in ['msg', 'msgs','message', 'messages', 'days','day']:
         return await message.channel.send("Invalid argument: Usage: t?serverchat day/msg [count]")
 
-    if arguments [1] and not isinstance(int, int(arguments[2])):
-        return await message.channel.send("Invalid argument: The count must be a number")
+    count = 100  # default
+    if len(arguments) >= 2:
+        try:
+            count = int(arguments[1])
+        except ValueError:
+            await message.channel.send("❌ The count must be a number.")
+            return
 
     # Locate chat log file; reuse same path logic as in normal_commands.chatlist_command.
     try:
