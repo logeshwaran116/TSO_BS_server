@@ -724,12 +724,10 @@ def _parse_log_line(line: str) -> str:
     """
     try:
         lst = line.split(' + : ') #spliting the string 
-        print(f"lst[0]='{lst[0]}'  parts={len(lst)}")
         dt = datetime.datetime.strptime(lst[0], "%Y-%m-%d %H:%M:%S").replace(tzinfo = datetime.timezone.utc)
         ts = int(dt.timestamp()) #convert into timezone
         return f"- <t:{ts}:f> | {lst[1]}"
     except:
-        print(f"FAILED: {e!r}  line={line!r}")
         return f" - {line}" # if line doesnt have time info return line
 
 
@@ -786,7 +784,9 @@ async def handle_serverchat_command(message, arguments):
  
     if arg in ('msg', 'msgs', 'message', 'messages'):
         count = max(1, min(count, 2000))           # clamp 1–2000
-        selected = raw[-count:]
+        selected = raw[-count * 2:]  # grab extra to account for host msgs being removed
+        selected = [l for l in selected if 'Host msg:' not in l]  # filter host msgs
+        selected = selected[-count:]  # trim back to requested count
         lines = [_parse_log_line(l.rstrip('\n')) for l in selected if l.strip()]
         title    = f"💬 Last {len(selected)} Messages of {server}"
  
@@ -799,13 +799,13 @@ async def handle_serverchat_command(message, arguments):
             # Expected log format: [YYYY-MM-DD HH:MM:SS] ...
             # Falls back to including all lines if timestamp can't be parsed.
             try:
-                ts_str  = raw[1:20]               # "[2025-07-09 14:32:00]"
+                ts_str  = line[1:20]               # "[2025-07-09 14:32:00]"
                 ts      = datetime.datetime.strptime(ts_str, "%Y-%m-%d %H:%M:%S")
                 if ts >= cutoff:
                     selected.append(line)
             except (ValueError, IndexError):
                 selected.append(line)              # keep lines we can't parse
-        lines = [_parse_log_line(l.rstrip('\n')) for l in selected if l.strip()]
+        lines = [_parse_log_line(l.rstrip('\n')) for l in selected if l.strip() and 'Host msg:' not in l]
         title = f"💬 Chat from the Last {count} Day{'s' if count != 1 else ''} in {server}"
  
     if not selected:
