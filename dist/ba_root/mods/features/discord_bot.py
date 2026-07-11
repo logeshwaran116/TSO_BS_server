@@ -785,7 +785,7 @@ async def handle_serverchat_command(message, arguments):
     if arg in ('msg', 'msgs', 'message', 'messages'):
         count = max(1, min(count, 2000))           # clamp 1–2000
         selected = raw[-count * 2:]  # grab extra to account for host msgs being removed
-        selected = [l for l in selected if 'Host msg:' not in l]  # filter host msgs
+        selected = [l for l in selected if 'Host msg:' not in l or '[DC]' in l] # filter host msgs
         selected = selected[-count:]  # trim back to requested count
         lines = [_parse_log_line(l.rstrip('\n')) for l in selected if l.strip()]
         title    = f"💬 Last {len(selected)} Messages of {server}"
@@ -805,7 +805,7 @@ async def handle_serverchat_command(message, arguments):
                     selected.append(line)
             except (ValueError, IndexError):
                 selected.append(f"- {line}")              # keep lines we can't parse
-        lines = [_parse_log_line(l.rstrip('\n')) for l in selected if l.strip() and 'Host msg:' not in l]
+        lines = [_parse_log_line(l.rstrip('\n')) for l in selected if l.strip() and 'Host msg:' not in l or '[DC]' in l]
         title = f"💬 Chat from the Last {count} Day{'s' if count != 1 else ''} in {server}"
  
     if not selected:
