@@ -724,10 +724,12 @@ def _parse_log_line(line: str) -> str:
     """
     try:
         lst = line.split(' + : ') #spliting the string 
+        print(f"lst[0]='{lst[0]}'  parts={len(lst)}")
         dt = datetime.datetime.strptime(lst[0], "%Y-%m-%d %H:%M:%S").replace(tzinfo = datetime.timezone.utc)
         ts = int(dt.timestamp()) #convert into timezone
         return f"- <t:{ts}:f> | {lst[1]}"
     except:
+        print(f"FAILED: {e!r}  line={line!r}")
         return f" - {line}" # if line doesnt have time info return line
 
 
@@ -797,7 +799,7 @@ async def handle_serverchat_command(message, arguments):
             # Expected log format: [YYYY-MM-DD HH:MM:SS] ...
             # Falls back to including all lines if timestamp can't be parsed.
             try:
-                ts_str  = raw[0:19]               # "[2025-07-09 14:32:00]"
+                ts_str  = raw[1:20]               # "[2025-07-09 14:32:00]"
                 ts      = datetime.datetime.strptime(ts_str, "%Y-%m-%d %H:%M:%S")
                 if ts >= cutoff:
                     selected.append(line)
