@@ -2398,5 +2398,5 @@ class JumpModal(discord.ui.Modal, title="Jump to page"):
         self.paginator.page = target
         self.paginator._sync_buttons()
         await interaction.response.edit_message(
-            embed=self.paginator._build_content(), view=self.paginator
+            content=self.paginator._build_content(), view=self.paginator
         )
