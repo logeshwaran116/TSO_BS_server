@@ -723,7 +723,7 @@ def _parse_log_line(line: str) -> str:
     render in discord
     """
     try:
-        lst = line.split(' + : ') #spliting the string 
+        lst = line.split('+ :') #spliting the string 
         dt = datetime.datetime.strptime(lst[0], "%Y-%m-%d %H:%M:%S").replace(tzinfo = datetime.timezone.utc)
         ts = int(dt.timestamp()) #convert into timezone
         return f"- <t:{ts}:f> | {lst[1]}"
