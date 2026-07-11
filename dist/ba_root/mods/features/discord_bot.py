@@ -719,14 +719,16 @@ async def handle_discord_command(message):
 
 def _parse_log_line(line: str) -> str:
     """
-    Convert:  2026-07-07 16:11:35 + : pb-IF4...
-    To:       2026-07-07 16:11:35 | pb-IF4...
+    Converting date and time in timestamp to 
+    render in discord
     """
-    # Split on ' + : ' and rejoin with ' | '
-    if ' + : ' in line:
-        timestamp, rest = line.split(' + : ', 1)
-        return f"➤ {timestamp} | {rest}"
-    return line  # return as-is if format doesn't match
+    try:
+        lst = line.split(' + : ') #spliting the string 
+        dt = datetime.datetime.strptime(dt[0], "%Y-%m-%d %H:%M:%S").replace(tzinfo = datetime.timezone.utc)
+        ts = int(dt.timestamp()) #convert into timezone
+        return f"- <t:{ts}:f> | {lst[1]}"
+    except:
+        return line # if line doesnt have time info return line
 
 
 async def handle_serverchat_command(message, arguments):
@@ -783,7 +785,7 @@ async def handle_serverchat_command(message, arguments):
     if arg in ('msg', 'msgs', 'message', 'messages'):
         count = max(1, min(count, 1000))           # clamp 1–1000
         selected = lines[-count:]
-        lines = [_parse_log_line(l.rstrip('\n')) for l in selected if l.strip()]
+        lines = [_parse_log_line(l) for l in selected]
         title    = f"💬 Last {len(selected)} Messages of {server}"
  
     else:  # day / days
@@ -796,20 +798,20 @@ async def handle_serverchat_command(message, arguments):
             # Falls back to including all lines if timestamp can't be parsed.
             try:
                 ts_str  = line[1:20]               # "[2025-07-09 14:32:00]"
-                ts      = datetime.strptime(ts_str, "%Y-%m-%d %H:%M:%S")
+                ts      = datetime.datetime.strptime(ts_str, "%Y-%m-%d %H:%M:%S")
                 if ts >= cutoff:
                     selected.append(line)
             except (ValueError, IndexError):
                 selected.append(line)              # keep lines we can't parse
-        lines = [_parse_log_line(l.rstrip('\n')) for l in selected if l.strip()]
+        lines = [_parse_log_line(l) for l in selected]
         title = f"💬 Chat from the Last {count} Day{'s' if count != 1 else ''} in {server}"
  
     if not selected:
         await message.channel.send("No messages found for that range.")
         return
     view = ChatPaginatorView(lines=selected, title=title, author=message.author)
-    sent = await message.channel.send(embed=view._build_embed(), view=view)
-    view.message = sent 
+    sent = await message.channel.send(content=view._build_content(), view=view)
+    view.message = sent
 
 async def handle_chatlist_command(message, arguments):
     """Show a player's recent chat from server chat logs.
@@ -2279,19 +2281,16 @@ class BsDataThread:
 
 
  
-# ─────────────────────────────────────────────
 #  Paginator View
-# ─────────────────────────────────────────────
- 
 class ChatPaginatorView(discord.ui.View):
     """
     Paginated viewer for server chat logs.
-    Buttons: |◀◀  ◀  [jump]  ▶  ▶▶|
+    Buttons: |⏮  ◀  🔢  ▶  ⏭|
     Times out after 3 minutes of inactivity.
     """
- 
+
     PER_PAGE = 15
- 
+
     def __init__(self, lines: list[str], title: str, author: discord.User | discord.Member):
         super().__init__(timeout=180)
         self.lines   = lines
@@ -2299,32 +2298,29 @@ class ChatPaginatorView(discord.ui.View):
         self.author  = author
         self.page    = 0
         self.total   = max(1, (len(lines) + self.PER_PAGE - 1) // self.PER_PAGE)
- 
+        self.message: discord.Message | None = None
+
         self._sync_buttons()
- 
+
     # ── helpers ──────────────────────────────
- 
+
     def _sync_buttons(self):
-        """Disable first/prev on page 0; disable next/last on final page."""
         self.btn_first.disabled = self.page == 0
         self.btn_prev.disabled  = self.page == 0
         self.btn_next.disabled  = self.page == self.total - 1
         self.btn_last.disabled  = self.page == self.total - 1
- 
-    def _build_embed(self) -> discord.Embed:
+
+    def _build_content(self) -> str:
         start = self.page * self.PER_PAGE
         chunk = self.lines[start : start + self.PER_PAGE]
- 
-        embed = discord.Embed(
-            title       = self.title,
-            description = "\n".join(chunk) or "*(no messages)*",
-            color       = discord.Color.from_str("#FF4444"),
-        )
-        embed.set_footer(text=f"📄 Page {self.page + 1}/{self.total}  •  {len(self.lines)} messages total")
-        return embed
- 
+
+        body = "\n".join(chunk) or "*(no messages)*"
+        footer = f"📄 Page {self.page + 1}/{self.total}  •  {len(self.lines)} messages total"
+
+        return f"🕐 **{self.title}**\n```\n{body}\n```\n{footer}"
+
     # ── interaction guard ─────────────────────
- 
+
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user.id != self.author.id:
             await interaction.response.send_message(
@@ -2332,50 +2328,47 @@ class ChatPaginatorView(discord.ui.View):
             )
             return False
         return True
- 
+
     # ── buttons ───────────────────────────────
- 
+
     @discord.ui.button(emoji="⏮️", style=discord.ButtonStyle.gray)
     async def btn_first(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.page = 0
         self._sync_buttons()
-        await interaction.response.edit_message(embed=self._build_embed(), view=self)
- 
+        await interaction.response.edit_message(content=self._build_content(), view=self)
+
     @discord.ui.button(emoji="◀️", style=discord.ButtonStyle.primary)
     async def btn_prev(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.page -= 1
         self._sync_buttons()
-        await interaction.response.edit_message(embed=self._build_embed(), view=self)
- 
-    @discord.ui.button(emoji="🔢", style=discord.ButtonStyle.danger, label=None)
+        await interaction.response.edit_message(content=self._build_content(), view=self)
+
+    @discord.ui.button(emoji="🔢", style=discord.ButtonStyle.danger)
     async def btn_jump(self, interaction: discord.Interaction, button: discord.ui.Button):
-        """Open a modal so the user can type a page number."""
         await interaction.response.send_modal(JumpModal(self))
- 
+
     @discord.ui.button(emoji="▶️", style=discord.ButtonStyle.primary)
     async def btn_next(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.page += 1
         self._sync_buttons()
-        await interaction.response.edit_message(embed=self._build_embed(), view=self)
- 
+        await interaction.response.edit_message(content=self._build_content(), view=self)
+
     @discord.ui.button(emoji="⏭️", style=discord.ButtonStyle.gray)
     async def btn_last(self, interaction: discord.Interaction, button: discord.ui.Button):
         self.page = self.total - 1
         self._sync_buttons()
-        await interaction.response.edit_message(embed=self._build_embed(), view=self)
- 
+        await interaction.response.edit_message(content=self._build_content(), view=self)
+
     # ── timeout ───────────────────────────────
- 
+
     async def on_timeout(self):
         for item in self.children:
             item.disabled = True
-        # message ref is stored after sending (see send_paginator helper)
-        if hasattr(self, "message") and self.message:
+        if self.message:
             try:
                 await self.message.edit(view=self)
             except discord.HTTPException:
                 pass
- 
  
 class JumpModal(discord.ui.Modal, title="Jump to page"):
     page_input = discord.ui.TextInput(
@@ -2403,5 +2396,5 @@ class JumpModal(discord.ui.Modal, title="Jump to page"):
         self.paginator.page = target
         self.paginator._sync_buttons()
         await interaction.response.edit_message(
-            embed=self.paginator._build_embed(), view=self.paginator
+            embed=self.paginator._build_content(), view=self.paginator
         )
