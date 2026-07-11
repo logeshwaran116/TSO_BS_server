@@ -775,7 +775,7 @@ async def handle_serverchat_command(message, arguments):
 
     try:
         with open(log_path, 'r', encoding='utf-8', errors='ignore') as f:
-            raw = f.readlines()
+            raw = [l for l in f.readlines() if l.strip()]
     except Exception as exc:
         await message.channel.send(f"Failed to read chat log: `{exc}`")
         return
@@ -792,19 +792,19 @@ async def handle_serverchat_command(message, arguments):
  
     else:  # day / days
         count    = max(1, min(count, 7))          # clamp 1–7
-        cutoff   = datetime.datetime.now() - datetime.timedelta(days=count)
+        cutoff   = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=count)
         selected = []
  
         for line in raw:
             # Expected log format: [YYYY-MM-DD HH:MM:SS] ...
             # Falls back to including all lines if timestamp can't be parsed.
             try:
-                ts_str  = line[1:20]               # "[2025-07-09 14:32:00]"
-                ts      = datetime.datetime.strptime(ts_str, "%Y-%m-%d %H:%M:%S")
+                ts_str  = line[0:19]               # "[2025-07-09 14:32:00]"
+                ts      = datetime.datetime.strptime(ts_str, "%Y-%m-%d %H:%M:%S").replace(tzinfo= datetime.timezone.utc)
                 if ts >= cutoff:
                     selected.append(line)
             except (ValueError, IndexError):
-                selected.append(line)              # keep lines we can't parse
+                selected.append(f"- {line}")              # keep lines we can't parse
         lines = [_parse_log_line(l.rstrip('\n')) for l in selected if l.strip() and 'Host msg:' not in l]
         title = f"💬 Chat from the Last {count} Day{'s' if count != 1 else ''} in {server}"
  
