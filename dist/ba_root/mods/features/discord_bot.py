@@ -775,7 +775,7 @@ async def handle_serverchat_command(message, arguments):
 
     try:
         with open(log_path, 'r', encoding='utf-8', errors='ignore') as f:
-            lines = f.readlines()
+            raw = f.readlines()
     except Exception as exc:
         await message.channel.send(f"Failed to read chat log: `{exc}`")
         return
@@ -784,8 +784,8 @@ async def handle_serverchat_command(message, arguments):
  
     if arg in ('msg', 'msgs', 'message', 'messages'):
         count = max(1, min(count, 2000))           # clamp 1–2000
-        selected = lines[-count:]
-        lines = [_parse_log_line(l) for l in selected]
+        selected = raw[-count:]
+        lines = [_parse_log_line(l.rstrip('\n')) for l in selected if l.strip()]
         title    = f"💬 Last {len(selected)} Messages of {server}"
  
     else:  # day / days
@@ -793,23 +793,23 @@ async def handle_serverchat_command(message, arguments):
         cutoff   = datetime.datetime.now() - datetime.timedelta(days=count)
         selected = []
  
-        for line in lines:
+        for line in raw:
             # Expected log format: [YYYY-MM-DD HH:MM:SS] ...
             # Falls back to including all lines if timestamp can't be parsed.
             try:
-                ts_str  = line[1:20]               # "[2025-07-09 14:32:00]"
+                ts_str  = raw[1:20]               # "[2025-07-09 14:32:00]"
                 ts      = datetime.datetime.strptime(ts_str, "%Y-%m-%d %H:%M:%S")
                 if ts >= cutoff:
                     selected.append(line)
             except (ValueError, IndexError):
                 selected.append(line)              # keep lines we can't parse
-        lines = [_parse_log_line(l) for l in selected]
+        lines = [_parse_log_line(l.rstrip('\n')) for l in selected if l.strip()]
         title = f"💬 Chat from the Last {count} Day{'s' if count != 1 else ''} in {server}"
  
     if not selected:
         await message.channel.send("No messages found for that range.")
         return
-    view = ChatPaginatorView(lines=selected, title=title, author=message.author)
+    view = ChatPaginatorView(lines= lines, title=title, author=message.author)
     sent = await message.channel.send(content=view._build_content(), view=view)
     view.message = sent
 
