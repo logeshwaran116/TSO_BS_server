@@ -724,11 +724,11 @@ def _parse_log_line(line: str) -> str:
     """
     try:
         lst = line.split(' + : ') #spliting the string 
-        dt = datetime.datetime.strptime(dt[0], "%Y-%m-%d %H:%M:%S").replace(tzinfo = datetime.timezone.utc)
+        dt = datetime.datetime.strptime(lst[0], "%Y-%m-%d %H:%M:%S").replace(tzinfo = datetime.timezone.utc)
         ts = int(dt.timestamp()) #convert into timezone
         return f"- <t:{ts}:f> | {lst[1]}"
     except:
-        return line # if line doesnt have time info return line
+        return f" - {line}" # if line doesnt have time info return line
 
 
 async def handle_serverchat_command(message, arguments):
@@ -783,13 +783,13 @@ async def handle_serverchat_command(message, arguments):
     # ── filter lines ──────────────────────────
  
     if arg in ('msg', 'msgs', 'message', 'messages'):
-        count = max(1, min(count, 1000))           # clamp 1–1000
+        count = max(1, min(count, 2000))           # clamp 1–2000
         selected = lines[-count:]
         lines = [_parse_log_line(l) for l in selected]
         title    = f"💬 Last {len(selected)} Messages of {server}"
  
     else:  # day / days
-        count    = max(1, min(count, 10))          # clamp 1–7
+        count    = max(1, min(count, 7))          # clamp 1–7
         cutoff   = datetime.datetime.now() - datetime.timedelta(days=count)
         selected = []
  
@@ -2317,7 +2317,7 @@ class ChatPaginatorView(discord.ui.View):
         body = "\n".join(chunk) or "*(no messages)*"
         footer = f"📄 Page {self.page + 1}/{self.total}  •  {len(self.lines)} messages total"
 
-        return f"🕐 **{self.title}**\n```\n{body}\n```\n{footer}"
+        return f"**{self.title}**\n{body}\n{footer}"
 
     # ── interaction guard ─────────────────────
 
