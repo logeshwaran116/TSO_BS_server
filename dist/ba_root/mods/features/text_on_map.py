@@ -19,8 +19,10 @@ class textonmap:
 
     def __init__(self):
         data = setti['textonmap']
-        left = data['bottom left watermark']
-        top = data['top watermark']  # This is the text that will be displayed
+        left = "\n_______________________________\n\n\n_______________________________\n"
+
+        #removed letter 'O' with bomb logo
+        top:str = data['top watermark'].replace('O',babase.charstr(babase.SpecialChar.LOGO_FLAT))  # This is the text that will be displayed
         nextMap = ""
         try:
             nextMap = bs.get_foreground_host_session().get_next_game_description().evaluate()
@@ -37,6 +39,7 @@ class textonmap:
         self.top_message(top)  # Pass the top message text here
         self.nextGame(nextMap)
         self.restart_msg()
+        
         if hasattr(_babase, "season_ends_in_days"):
             if _babase.season_ends_in_days < 100:
                 self.season_reset(_babase.season_ends_in_days)
@@ -63,6 +66,7 @@ class textonmap:
 
         self.delt = bs.timer(7, node.delete)
         self.index = int((self.index + 1) % len(self.highlights))
+
 
     def left_watermark(self, text):
         # First text node with rainbow animation
@@ -171,22 +175,16 @@ class textonmap:
 
             bs.apptimer(base_delay + idx * step, _reveal)
 
-        # Re-run the fade animation every 10 seconds
+        '''# Re-run the fade animation every 10 seconds
         if not hasattr(self, '_top_fade_timer'):
-            self._top_fade_timer = bs.timer(10.0, babase.Call(self._run_top_fade_animation), repeat=True)
+            self._top_fade_timer = bs.timer(10.0, babase.Call(self._run_top_fade_animation), repeat=True)'''
     
     def _make_shimmer_text(self, tag_text, base_color):
         TAG_SCALE = 1.3  # Larger scale for top message
-        TAG_SPACING = 20  # More spacing for larger text
-        
-        # Ocean Blue & Green Combination (beautiful colors)
-        WAVE_COLOR_1 = (2, 1, 0)   # Deep Blue
-        WAVE_COLOR_2 = (2, 0, 0)   # Cyan
-        WAVE_COLOR_3 = (2, 2, 2)   # Emerald Green
-        
-        # Slower wave parameters
-        WAVE_PERIOD = 4.0  # Increased from 2.5 to 4.0 (slower overall wave)
-        WAVE_DELAY = 0.15  # Increased from 0.08 to 0.15 (more delay between characters)
+        TAG_SPACING = 25  # More spacing for larger text
+
+        # Slower wave parameters (still used for glow + scale pulse + underline)
+        PULSE_PERIOD = 2.5
         TICK_MS = 50
 
         n = max(1, len(tag_text))
@@ -206,6 +204,21 @@ class textonmap:
         except Exception:
             pass
 
+        def _random_color():
+            return (random.random(), random.random(), random.random())
+
+        def _animate_letter_color(node):
+            if not node.exists():
+                return
+            duration = random.uniform(0.8, 2.5)  # each letter picks its own random speed
+            start_color = node.color
+            target_color = _random_color()
+            bs.animate_array(
+                node, 'color', 3,
+                {0.0: start_color, duration: target_color}
+            )
+            bs.timer(duration, bs.WeakCall(_animate_letter_color, node))
+
         self._glow_nodes = []
         for i, ch in enumerate(tag_text):
             x = TAG_SPACING * (i - center_index)
@@ -221,14 +234,15 @@ class textonmap:
                     'v_attach': 'top',
                     'scale': TAG_SCALE,
                     'position': (x, y),
-                    'color': tuple(base_color),
+                    'color': _random_color(),
                     'shadow': 0.8,
                     'vr_depth': -19
                 }
             )
             self._char_nodes.append((char_node, i))
+            _animate_letter_color(char_node)  # kick off this letter's independent color loop
 
-            # Soft glow behind the letter
+            '''# Soft glow behind the letter
             try:
                 glow_node = bs.newnode(
                     'text',
@@ -247,63 +261,42 @@ class textonmap:
                 )
                 self._glow_nodes.append((glow_node, i))
             except Exception:
-                pass
+                pass'''
 
         t = {'v': 0.0}
 
         def _tick():
             try:
-                t['v'] = (t['v'] + TICK_MS / 1000.0) % max(0.5, WAVE_PERIOD)
+                t['v'] = (t['v'] + TICK_MS / 1000.0) % PULSE_PERIOD
+
+                # Subtle scale pulse (color is now handled independently per-letter)
                 for idx, pair in enumerate(self._char_nodes):
                     char_node, _ = pair
                     if not char_node.exists():
                         continue
-                        
-                    local_time = (t['v'] + idx * WAVE_DELAY) % WAVE_PERIOD
-                    phase = local_time / WAVE_PERIOD
-
-                    if phase < 1/3:
-                        u = phase * 3
-                        r = WAVE_COLOR_1[0] + (WAVE_COLOR_2[0] - WAVE_COLOR_1[0]) * u
-                        g = WAVE_COLOR_1[1] + (WAVE_COLOR_2[1] - WAVE_COLOR_1[1]) * u
-                        b = WAVE_COLOR_1[2] + (WAVE_COLOR_2[2] - WAVE_COLOR_1[2]) * u
-                    elif phase < 2/3:
-                        u = (phase - 1/3) * 3
-                        r = WAVE_COLOR_2[0] + (WAVE_COLOR_3[0] - WAVE_COLOR_2[0]) * u
-                        g = WAVE_COLOR_2[1] + (WAVE_COLOR_3[1] - WAVE_COLOR_2[1]) * u
-                        b = WAVE_COLOR_2[2] + (WAVE_COLOR_3[2] - WAVE_COLOR_2[2]) * u
-                    else:
-                        u = (phase - 2/3) * 3
-                        r = WAVE_COLOR_3[0] + (WAVE_COLOR_1[0] - WAVE_COLOR_3[0]) * u
-                        g = WAVE_COLOR_3[1] + (WAVE_COLOR_1[1] - WAVE_COLOR_3[1]) * u
-                        b = WAVE_COLOR_3[2] + (WAVE_COLOR_1[2] - WAVE_COLOR_3[2]) * u
-
-                    char_node.color = (r, g, b)
-
-                    # Subtle scale pulse
                     try:
+                        phase = ((t['v'] + idx * 0.1) % PULSE_PERIOD) / PULSE_PERIOD
                         pulse = 1.0 + 0.03 * math.sin(phase * 2.0 * math.pi)
                         char_node.scale = TAG_SCALE * pulse
                     except Exception:
                         pass
 
-                # Animate glow opacity in sync
+                '''# Animate glow opacity in sync with the scale pulse
                 try:
                     for idx, pair in enumerate(getattr(self, '_glow_nodes', [])):
                         glow_node, _ = pair
                         if not glow_node.exists():
                             continue
-                        local_time = (t['v'] + idx * WAVE_DELAY) % WAVE_PERIOD
-                        phase = local_time / WAVE_PERIOD
+                        phase = ((t['v'] + idx * 0.1) % PULSE_PERIOD) / PULSE_PERIOD
                         glow = 0.12 + 0.20 * max(0.0, math.sin(phase * 2.0 * math.pi))
                         glow_node.opacity = glow
                 except Exception:
-                    pass
+                    pass'''
 
                 # Underline gentle pulse
                 try:
                     if hasattr(self, '_top_underline') and self._top_underline.exists():
-                        self._top_underline.opacity = 0.10 + 0.08 * (0.5 + 0.5 * math.sin(t['v'] * 2.0 * math.pi / WAVE_PERIOD))
+                        self._top_underline.opacity = 0.10 + 0.08 * (0.5 + 0.5 * math.sin(t['v'] * 2.0 * math.pi / PULSE_PERIOD))
                 except Exception:
                     pass
             except:
