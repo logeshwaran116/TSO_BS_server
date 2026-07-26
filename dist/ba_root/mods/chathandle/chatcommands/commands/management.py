@@ -1225,7 +1225,7 @@ def stats_to_clientid(arguments, clid, acid):
                  if stats:
                      reply = (
                          f"\ue048| Name: {fname}\n"
-                         f"\ue048| PB-ID: {stats['aid']}\n"
+                         #f"\ue048| PB-ID: {stats['aid']}\n"
                          f"\ue048| Rank: {stats['rank']}\n"
                          f"\ue048| Score: {stats['scores']}\n"
                          f"\ue048| Games: {stats['games']}\n"

@@ -121,7 +121,7 @@ def stats_to_clientid(arguments, clid, acid):
                      tickets = nc.getcoins(pbid)
                      reply = (
                          f"\ue048| Name: {fname}\n"
-                         f"\ue048| PB-ID: {stats['aid']}\n"
+                         #f"\ue048| PB-ID: {stats['aid']}\n"
                          f"\ue048| Tickets: {tickets}\U0001FA99\n"
                          f"\ue048| Rank: {stats['rank']}\n"
                          f"\ue048| Score: {stats['scores']}\n"
