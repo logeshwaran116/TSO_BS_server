@@ -73,7 +73,7 @@ def get_profiles() -> dict:
     """
     if CacheData.profiles == {}:
         try:
-            if os.stat(PLAYERS_DATA_PATH + "profiles.json").st_size > 1000000:
+            if os.stat(PLAYERS_DATA_PATH + "profiles.json").st_size > 5000000:
                 newpath = f'{PLAYERS_DATA_PATH}profiles-{str(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))}.json'
                 shutil.copyfile(PLAYERS_DATA_PATH + "profiles.json", newpath)
                 profiles = {"pb-sdf": {}}
