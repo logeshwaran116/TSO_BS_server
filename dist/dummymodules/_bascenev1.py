@@ -1765,6 +1765,10 @@ def set_enable_default_kick_voting(enable: bool) -> None:
     # This is a dummy stub; the actual implementation is native code.
     return None
 
+def disable_kickvote(pbid:str):
+    """(internal)"""
+    # This is a dummy stub; the actual implementation is native code.
+    return None
 
 def set_internal_music(
     music: babase.SimpleSound | None, volume: float = 1.0, loop: bool = True
