@@ -213,17 +213,39 @@ def on_player_join_server(pbid, player_data, ip, device_id):
         serverdata.clients[pbid]["lastJoin"] = now
 
     # Always enforce protected role kickvote immunity on join
+# Always enforce protected/owner/moderator/leadstaff role kickvote immunity on join
     try:
         roles = pdata.get_roles()
         immune_roles = ("protected", "owner", "moderator", "leadstaff")
+
+        print(f"[KICKVOTE DEBUG] Checking pbid={pbid!r} against roles: {immune_roles}")
+        print(f"[KICKVOTE DEBUG] roles.json has keys: {list(roles.keys())}")
+
+        matched_role = None
         for role_name in immune_roles:
-            if role_name in roles and pbid in roles[role_name].get("ids", []):
-                session = bs.get_foreground_host_session()
-                if session is not None:
-                    with session.context:
-                        result = _bascenev1.disable_kickvote(pbid)
-                        print(f"disable_kickvote({pbid}) returned: {result!r}")
+            if role_name not in roles:
+                print(f"[KICKVOTE DEBUG]   '{role_name}' not found in roles at all")
+                continue
+            ids_list = roles[role_name].get("ids", [])
+            is_match = pbid in ids_list
+            print(f"[KICKVOTE DEBUG]   '{role_name}' has {len(ids_list)} ids, pbid match: {is_match}")
+            if is_match:
+                matched_role = role_name
                 break
+
+        if matched_role:
+            print(f"[KICKVOTE DEBUG] MATCHED role '{matched_role}' -> attempting disable_kickvote")
+            session = bs.get_foreground_host_session()
+            print(f"[KICKVOTE DEBUG] session = {session!r}")
+            if session is not None:
+                with session.context:
+                    result = _bascenev1.disable_kickvote(pbid)
+                    print(f"[KICKVOTE DEBUG] disable_kickvote({pbid!r}) returned: {result!r}")
+            else:
+                print("[KICKVOTE DEBUG] session was None, could not call disable_kickvote")
+        else:
+            print(f"[KICKVOTE DEBUG] No role matched for pbid={pbid!r} — immunity NOT applied")
+
     except Exception:
         import traceback
         traceback.print_exc()
