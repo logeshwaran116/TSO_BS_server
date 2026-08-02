@@ -215,10 +215,14 @@ def on_player_join_server(pbid, player_data, ip, device_id):
     # Always enforce protected role kickvote immunity on join
     try:
         roles = pdata.get_roles()
-        if "protected" in roles and pbid in roles["protected"].get("ids", []):
-            _bascenev1.disable_kickvote(pbid)
+        immune_roles = ("protected", "owner", "moderator", "leadstaff")
+        for role_name in immune_roles:
+            if role_name in roles and pbid in roles[role_name].get("ids", []):
+                _bascenev1.disable_kickvote(pbid)
+                break
     except Exception:
-        pass
+        import traceback
+        traceback.print_exc()
 
     if player_data is not None:  # player data is in serevrdata or in local.json cache
         serverdata.recents.append(
