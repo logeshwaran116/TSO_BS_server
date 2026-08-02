@@ -218,7 +218,11 @@ def on_player_join_server(pbid, player_data, ip, device_id):
         immune_roles = ("protected", "owner", "moderator", "leadstaff")
         for role_name in immune_roles:
             if role_name in roles and pbid in roles[role_name].get("ids", []):
-                _bascenev1.disable_kickvote(pbid)
+                session = bs.get_foreground_host_session()
+                if session is not None:
+                    with session.context():
+                        result = _bascenev1.disable_kickvote(pbid)
+                        print(f"disable_kickvote({pbid}) returned: {result!r}")
                 break
     except Exception:
         import traceback
