@@ -220,7 +220,7 @@ def on_player_join_server(pbid, player_data, ip, device_id):
             if role_name in roles and pbid in roles[role_name].get("ids", []):
                 session = bs.get_foreground_host_session()
                 if session is not None:
-                    with session.context():
+                    with session.context:
                         result = _bascenev1.disable_kickvote(pbid)
                         print(f"disable_kickvote({pbid}) returned: {result!r}")
                 break
