@@ -216,7 +216,7 @@ def on_player_join_server(pbid, player_data, ip, device_id):
     try:
         roles = pdata.get_roles()
         if "protected" in roles and pbid in roles["protected"].get("ids", []):
-            _babase.disable_kickvote(pbid)
+            _bascenev1.disable_kickvote(pbid)
     except Exception:
         pass
 

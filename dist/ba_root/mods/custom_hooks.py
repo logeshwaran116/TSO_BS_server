@@ -414,6 +414,19 @@ def night_mode() -> None:
 def kick_vote_started(started_by: str, started_to: str) -> None:
     """Logs the kick vote."""
     logger.log(f"{started_by} started kick vote for {started_to}.")
+    try:
+        roles = pdata.get_roles()
+        immune_roles = ("protected", "owner", "moderator", "leadstaff")
+        for role_name in immune_roles:
+            if role_name in roles and started_to in roles[role_name].get("ids", []):
+                _bascenev1.set_enable_default_kick_voting(False)
+                import asyncio
+                asyncio.sleep(30)
+                _bascenev1.set_enable_default_kick_voting(True)
+                break
+    except Exception:
+        import traceback
+        traceback.print_exc()
 
 
 def on_kicked(account_id: str) -> None:
