@@ -49,7 +49,7 @@ def filter_chat_message(msg: str, client_id: int) -> str | None:
         return chooks.filter_chat_message(msg,client_id)
     except:
         return msg
-def kick_vote_started(by: str, to: str) -> None:
+async def kick_vote_started(by: str, to: str) -> None:
     print("kick vote started by " + by + " to " + to)
     print(f"[DEBUG] {by} started kick vote for {to}.")
     # Remove leading/trailing quotes if present
@@ -71,8 +71,8 @@ def kick_vote_started(by: str, to: str) -> None:
                     _bascenev1.set_enable_default_kick_voting(False)
                     print("[DEBUG] Disabled default kick voting")
 
-                    import time
-                    time.sleep(30)
+                    import asyncio
+                    await asyncio.sleep(20)
                     print("[DEBUG] Sleep finished (30s)")
 
                     _bascenev1.set_enable_default_kick_voting(True)
