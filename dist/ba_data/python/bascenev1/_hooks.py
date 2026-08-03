@@ -71,8 +71,8 @@ def kick_vote_started(by: str, to: str) -> None:
                     _bascenev1.set_enable_default_kick_voting(False)
                     print("[DEBUG] Disabled default kick voting")
 
-                    import asyncio
-                    asyncio.sleep(30)
+                    import time
+                    time.sleep(30)
                     print("[DEBUG] Sleep finished (30s)")
 
                     _bascenev1.set_enable_default_kick_voting(True)
