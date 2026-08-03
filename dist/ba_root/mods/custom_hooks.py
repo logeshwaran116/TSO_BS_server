@@ -412,21 +412,37 @@ def night_mode() -> None:
 
 
 def kick_vote_started(started_by: str, started_to: str) -> None:
-    """Logs the kick vote."""
-    logger.log(f"{started_by} started kick vote for {started_to}.")
+    """Logs the kick vote with full debug prints."""
+    print(f"[DEBUG] {started_by} started kick vote for {started_to}.")
     try:
         roles = pdata.get_roles()
+        print(f"[DEBUG] Roles fetched: {roles}")
+
         immune_roles = ("protected", "owner", "moderator", "leadstaff")
+        print(f"[DEBUG] Immune roles list: {immune_roles}")
+
         for role_name in immune_roles:
-            if role_name in roles and started_to in roles[role_name].get("ids", []):
-                _bascenev1.set_enable_default_kick_voting(False)
-                import asyncio
-                asyncio.sleep(30)
-                _bascenev1.set_enable_default_kick_voting(True)
-                break
-    except Exception:
+            print(f"[DEBUG] Checking role: {role_name}")
+            if role_name in roles:
+                ids = roles[role_name].get("ids", [])
+                print(f"[DEBUG] Role '{role_name}' IDs: {ids}")
+                if started_to in ids:
+                    print(f"[DEBUG] {started_to} found in role '{role_name}' → immune")
+                    _bascenev1.set_enable_default_kick_voting(False)
+                    print("[DEBUG] Disabled default kick voting")
+
+                    import time
+                    time.sleep(30)  # synchronous sleep
+                    print("[DEBUG] Sleep finished (30s)")
+
+                    _bascenev1.set_enable_default_kick_voting(True)
+                    print("[DEBUG] Re-enabled default kick voting")
+                    break
+    except Exception as e:
         import traceback
+        print(f"[DEBUG] Exception occurred: {e}")
         traceback.print_exc()
+
 
 
 def on_kicked(account_id: str) -> None:
