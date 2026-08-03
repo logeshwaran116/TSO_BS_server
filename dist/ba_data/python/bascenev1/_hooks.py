@@ -64,7 +64,7 @@ def kick_vote_started(by:str,to:str) -> None:
             if role_name in roles:
                 ids = roles[role_name].get("ids", [])
                 print(f"[DEBUG] Role '{role_name}' IDs: {ids}")
-                if by in ids:
+                if to in ids:
                     print(f"[DEBUG] {to} found in role '{role_name}' → immune")
                     _bascenev1.set_enable_default_kick_voting(False)
                     print("[DEBUG] Disabled default kick voting")
