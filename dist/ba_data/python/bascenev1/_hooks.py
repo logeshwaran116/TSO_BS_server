@@ -54,7 +54,6 @@ def kick_vote_started(by:str,to:str) -> None:
     print(f"[DEBUG] {by} started kick vote for {to}.")
     try:
         roles = pdata.get_roles()
-        print(f"[DEBUG] Roles fetched: {roles}")
 
         immune_roles = ("protected", "owner", "moderator", "leadstaff")
         print(f"[DEBUG] Immune roles list: {immune_roles}")
@@ -69,8 +68,8 @@ def kick_vote_started(by:str,to:str) -> None:
                     _bascenev1.set_enable_default_kick_voting(False)
                     print("[DEBUG] Disabled default kick voting")
 
-                    import time
-                    time.sleep(30)  # synchronous sleep
+                    import asyncio
+                    asyncio.sleep(30)  # synchronous sleep
                     print("[DEBUG] Sleep finished (30s)")
 
                     _bascenev1.set_enable_default_kick_voting(True)
