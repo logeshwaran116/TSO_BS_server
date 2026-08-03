@@ -49,12 +49,15 @@ def filter_chat_message(msg: str, client_id: int) -> str | None:
         return chooks.filter_chat_message(msg,client_id)
     except:
         return msg
-def kick_vote_started(by:str,to:str) -> None:
-    print("kick vot started by"+by+" to"+to)
+def kick_vote_started(by: str, to: str) -> None:
+    print("kick vote started by " + by + " to " + to)
     print(f"[DEBUG] {by} started kick vote for {to}.")
+    # Remove leading/trailing quotes if present
+    by = by.strip('"')
+    to = to.strip('"')
+
     try:
         roles = pdata.get_roles()
-
         immune_roles = ("protected", "owner", "moderator", "leadstaff")
         print(f"[DEBUG] Immune roles list: {immune_roles}")
 
@@ -69,7 +72,7 @@ def kick_vote_started(by:str,to:str) -> None:
                     print("[DEBUG] Disabled default kick voting")
 
                     import asyncio
-                    asyncio.sleep(30)  # synchronous sleep
+                    asyncio.sleep(30)
                     print("[DEBUG] Sleep finished (30s)")
 
                     _bascenev1.set_enable_default_kick_voting(True)
@@ -79,6 +82,7 @@ def kick_vote_started(by:str,to:str) -> None:
         import traceback
         print(f"[DEBUG] Exception occurred: {e}")
         traceback.print_exc()
+
 
 def local_chat_message(msg: str) -> None:
     classic = babase.app.classic
