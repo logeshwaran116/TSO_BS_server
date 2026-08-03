@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 import babase
 
 import _bascenev1
+from playersdata import  pdata
 
 if TYPE_CHECKING:
     from typing import Any
@@ -50,6 +51,35 @@ def filter_chat_message(msg: str, client_id: int) -> str | None:
         return msg
 def kick_vote_started(by:str,to:str) -> None:
     print("kick vot started by"+by+" to"+to)
+    print(f"[DEBUG] {by} started kick vote for {to}.")
+    try:
+        roles = pdata.get_roles()
+        print(f"[DEBUG] Roles fetched: {roles}")
+
+        immune_roles = ("protected", "owner", "moderator", "leadstaff")
+        print(f"[DEBUG] Immune roles list: {immune_roles}")
+
+        for role_name in immune_roles:
+            print(f"[DEBUG] Checking role: {role_name}")
+            if role_name in roles:
+                ids = roles[role_name].get("ids", [])
+                print(f"[DEBUG] Role '{role_name}' IDs: {ids}")
+                if by in ids:
+                    print(f"[DEBUG] {to} found in role '{role_name}' → immune")
+                    _bascenev1.set_enable_default_kick_voting(False)
+                    print("[DEBUG] Disabled default kick voting")
+
+                    import time
+                    time.sleep(30)  # synchronous sleep
+                    print("[DEBUG] Sleep finished (30s)")
+
+                    _bascenev1.set_enable_default_kick_voting(True)
+                    print("[DEBUG] Re-enabled default kick voting")
+                    break
+    except Exception as e:
+        import traceback
+        print(f"[DEBUG] Exception occurred: {e}")
+        traceback.print_exc()
 
 def local_chat_message(msg: str) -> None:
     classic = babase.app.classic
