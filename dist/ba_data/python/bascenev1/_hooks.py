@@ -8,7 +8,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import babase
-
+import bascenev1 as bs
 import _bascenev1
 from playersdata import  pdata
 
@@ -49,8 +49,43 @@ def filter_chat_message(msg: str, client_id: int) -> str | None:
         return chooks.filter_chat_message(msg,client_id)
     except:
         return msg
+
+    
+import traceback
+
 def kick_vote_started(by: str, to: str) -> None:
     print("kick vote started by " + by + " to " + to)
+    by = by.strip('"').strip("'")
+    to = to.strip('"').strip("'")
+
+    print(f"[DEBUG] {by} started kick vote for {to}.")
+
+    try:
+        roles = pdata.get_roles()
+        immune_roles = ("protected", "owner", "moderator", "leadstaff")
+
+        for role_name in immune_roles:
+            if role_name in roles and to in roles[role_name].get("ids", []):
+                print(f"[DEBUG] {to} found in role '{role_name}' → immune")
+
+                session = bs.get_foreground_host_session()
+                if session is not None:
+                    with session.context:
+                        _bascenev1.set_enable_default_kick_voting(False)
+                        print("[DEBUG] Disabled default kick voting")
+
+                        def _reenable():
+                            try:
+                                _bascenev1.set_enable_default_kick_voting(True)
+                                print("[DEBUG] Re-enabled default kick voting")
+                            except Exception:
+                                traceback.print_exc()
+
+                        bs.timer(30.0, babase.Call(_reenable))
+                break
+    except Exception as e:
+        print(f"[DEBUG] Exception occurred: {e}")
+        traceback.print_exc()
 
 
 def local_chat_message(msg: str) -> None:
