@@ -654,6 +654,9 @@ async def handle_discord_command(message):
         await handle_unmute_pbid_command(message, arguments)
         return
 
+    if command == 'info':
+        await handle_info_cmd(message, arguments)
+        return
 
     # Map Discord commands to management functions (in-game)
     command_map = {
@@ -719,26 +722,26 @@ async def handle_discord_command(message):
 
 def _parse_log_line(line: str) -> str:
     """
-    Converting date and time in timestamp to 
+    Converting date and time in timestamp to
     render in discord
     """
     try:
-        lst = line.split(' + : ') #spliting the string 
-        dt = datetime.datetime.strptime(lst[0], "%Y-%m-%d %H:%M:%S").replace(tzinfo = datetime.timezone.utc)
-        ts = int(dt.timestamp()) #convert into timezone
+        lst = line.split(' + : ', 1)  # maxsplit=1: keeps rest of message intact
+                                       # even if it contains ' + : ' itself
+        dt = datetime.datetime.strptime(lst[0], "%Y-%m-%d %H:%M:%S").replace(tzinfo=datetime.timezone.utc)
+        ts = int(dt.timestamp())  # convert into timezone
         return f"- <t:{ts}:f> | {lst[1]}"
-    except:
-        return f" - {line}" # if line doesnt have time info return line
+    except Exception:
+        return f" - {line}"  # if line doesn't have time info return line
 
 
 async def handle_serverchat_command(message, arguments):
-    """Show whole server chat by message count or day
+    """Show chat for pb-ids
     Usage from Discord 
     t?serverchat day/msg [count]
     
     Example:
-    t?serverchat day 7 -> last 7 days chat
-    t?serverchat msg 100 -> last 100 messages
+    t?chatlist pb-id1 pb-id2 ... 100
     created by sanji"""
     server = babase.app.classic.server._config.party_name
     if not server:
@@ -816,36 +819,40 @@ async def handle_serverchat_command(message, arguments):
     view.message = sent
 
 async def handle_chatlist_command(message, arguments):
-    """Show a player's recent chat from server chat logs.
+    """Show server chat filtered by pb-id(s), with an optional message count limit.
 
-    Usage from Discord (in your chatlist channel):
-      t?chatlist <pb-id> [days]
+    Usage from Discord:
+    t?chatlist [pb-id1] [pb-id2] ... [count]
 
     Example:
-      t?chatlist pb-123 1   -> last 1 day
-      t?chatlist pb-123 2   -> last 2 days
-    """
-    # Restrict this command to a specific channel if configured.
-    if CHATLIST_CHANNEL_ID and message.channel.id != CHATLIST_CHANNEL_ID:
-        return
+    t?chatlist pb-IF4xUVgSBg== 300 -> last 300 matching messages for that pb-id
+    t?chatlist pb-IF4xUVgSBg== pb-IF4OU0UkLw== -> matches for either pb-id, default count
+    created by sanji"""
+    server = babase.app.classic.server._config.party_name
+    if not server:
+        server = 'Unknown'
 
     if not arguments:
-        await message.channel.send("Usage: `t?chatlist <pb-id> [days]`")
+        await message.channel.send("usage: t?chatlist [pb-ids] [count]")
         return
 
-    pbid = arguments[0]
-    # Default to 1 day if not provided.
-    days = 1
-    if len(arguments) >= 2:
-        try:
-            days = max(1, int(arguments[1]))
-        except Exception:
-            await message.channel.send("Days must be a number (e.g. `1` or `2`).")
-            return
+    try:
+        count = min(3000, int(arguments[-1]))
+        arguments = arguments[:-1]
+    except ValueError:
+        count = 100
 
-    # Hard cap to avoid huge scans.
-    if days > 7:
-        days = 7
+    # Re-check after possibly stripping the count arg — otherwise an
+    # input like "t?chatlist 300" (count only, no pb-ids) would silently
+    # fall through with an empty arguments list and match everything.
+    if not arguments:
+        await message.channel.send("usage: t?chatlist [pb-ids] [count]")
+        return
+
+    for pb in arguments:
+        if not pb.startswith("pb"):
+            await message.channel.send("Invalid pb-ids. Enter only valid pb-ids")
+            return
 
     # Locate chat log file; reuse same path logic as in normal_commands.chatlist_command.
     try:
@@ -861,70 +868,67 @@ async def handle_chatlist_command(message, arguments):
         await message.channel.send("Chat log file not found on server.")
         return
 
-    # Threshold time.
-    now = datetime.datetime.now()
-    threshold = now - datetime.timedelta(days=days)
-
     try:
         with open(log_path, 'r', encoding='utf-8', errors='ignore') as f:
-            lines = f.readlines()
+            raw = [l for l in f.readlines() if l.strip()]
     except Exception as exc:
         await message.channel.send(f"Failed to read chat log: `{exc}`")
         return
 
-    matched: list[str] = []
+    # filter lines
+    lines = []
+    msg_count = 0
 
-    for ln in lines:
-        if pbid not in ln:
-            continue
+    for text in raw:
+        if any(pb in text for pb in arguments) and "Host msg" not in text:
+            lines.append(_parse_log_line(text.rstrip('\n')))
+            msg_count += 1
+            if msg_count == count:
+                break
 
-        # Try to parse timestamp from the beginning of the line.
-        # Common format: "[YYYY-MM-DD HH:MM:SS] ..." or "YYYY-MM-DD HH:MM:SS ..."
-        ts_ok = False
-        try:
-            raw = ln.strip()
-            if raw.startswith('[') and len(raw) >= 21:
-                ts_str = raw[1:20]
-            else:
-                ts_str = raw[:19]
-            dt = datetime.datetime.strptime(ts_str, '%Y-%m-%d %H:%M:%S')
-            if dt >= threshold:
-                ts_ok = True
-        except Exception:
-            # If we can't parse the timestamp, keep the line (better too many than missing).
-            ts_ok = True
+    title = f"💬 Last {len(lines)} Messages of {server} for pb-ids {', '.join(arguments)}"
 
-        if ts_ok:
-            matched.append(ln.strip())
-
-    if not matched:
-        await message.channel.send(f"No chat messages found for `{pbid}` in the last {days} day(s).")
+    if not lines:
+        await message.channel.send("No messages found for that pb-ids.")
         return
 
-    # Only show the most recent 50 matching lines to avoid spam.
-    matched = matched[-50:]
+    view = ChatPaginatorView(lines=lines, title=title, author=message.author)
+    sent = await message.channel.send(content=view._build_content(), view=view)
+    view.message = sent
 
-    # Build one or more messages respecting Discord 2000-char limit.
-    header = f"Chat list for `{pbid}` (last {days} day(s))\n"
-    block = ""
-    messages = []
-    for ln in matched:
-        line = ln + "\n"
-        if len(header) + len(block) + len(line) > 1900:
-            messages.append(header + "```text\n" + block + "```")
-            block = ""
-        block += line
-    if block:
-        messages.append(header + "```text\n" + block + "```")
+async def handle_info_cmd(message, arguments:list[str]):
+    if not arguments[0].startswith('pb'):
+        await message.channel.send("Invalid pb-id")
+        return
+    data = pdata.player_info(arguments[0])
+    if data:
+        await message.channel.send(data)
+        return
+    
+    await message.channel.send("Player data not found in server. Fetching from bs web")
+    import requests
+    def get_bombsquad_player(pb_id: str) -> dict:
+        url = "http://bombsquadgame.com/accountquery"
+        params = {"id": pb_id}
+        headers = {"User-Agent": "Mozilla/5.0"}
 
-    # Send paginated messages with short delay to avoid rate limits.
-    for idx, content in enumerate(messages, start=1):
-        if len(messages) > 1:
-            content_with_page = content + f"\n_Page {idx}/{len(messages)}_"
+        response = requests.get(url, params=params, headers=headers)
+
+        if response.status_code == 200:
+            return response.json()
         else:
-            content_with_page = content
-        await message.channel.send(content_with_page)
-        await asyncio.sleep(1.0)
+            print(f"Error {response.status_code}: {response.text}")
+            return {}
+    player_data = get_bombsquad_player(arguments[0])
+    if not player_data:
+        await message.channel.send("Unable to fetch the data")
+        return
+    display_name = player_data.get("name_html").split('>')[1]
+    created = datetime.datetime(*player_data.get("created")).timestamp()
+
+    msg = f"Account: {display_name}\nCreated: <t:{int(created)}:f>"
+    await message.channel.send(msg)
+
 
 def _format_mod_entries(entries: list[tuple[str, str, str, str]]) -> list[str]:
     """Return markdown lines for embed descriptions."""
@@ -1744,7 +1748,7 @@ async def refresh_stats():
                     msg = await stats_channel.send(embed=stats_embed)
                     livestatsmsgs.insert(0, msg)
 
-            await asyncio.sleep(5)  # Stagger chat embed update to avoid rate limit
+            await asyncio.sleep(2)  # Stagger chat embed update to avoid rate limit
 
             # Handle chat embed (index 1)
             chat_embed = await get_chat_embed()
@@ -1765,7 +1769,7 @@ async def refresh_stats():
             import traceback
             print(f"Error updating stats: {e}")
             traceback.print_exc()
-        await asyncio.sleep(15)  # Increased from 3s to 15s to avoid Discord rate limits
+        await asyncio.sleep(10)  # Increased from 3s to 15s to avoid Discord rate limits
 
 async def send_logs():
     global logs, _send_logs_running
@@ -1944,7 +1948,7 @@ async def get_stats_embed():
     )
     
     embed.set_author(
-        name="LIVE SERVER STATUS | NODE #1", 
+        name="LIVE SERVER STATUS", 
         icon_url="https://cdn.discordapp.com/emojis/878301194865508422.gif?size=512"
     )
     

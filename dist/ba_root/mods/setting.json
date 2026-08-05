@@ -11,7 +11,8 @@
         "msg": [
             "Type /coinhelp to see coins commands.",
             "Type /claim to get daily claim",
-            "downlaod new mods from discord"
+            "downlaod new mods from discord",
+            "Type /help to explore commands"
         ]
     },
     "ShowKickVoteStarterName": true,
@@ -194,7 +195,7 @@
             ],
             "randomColor": true
         },
-        "top watermark": "⚔️『━━━━━━━━━━━━━━』⚔️ 👑 ᴛᴀᴍɪʟ sᴇʀᴠᴇʀ ᴏғғɪᴄɪᴀʟ 👑 ⚔️『━━━━━━━━━━━━━━』⚔️"
+        "top watermark": "TAMIL SERVER OFFICIAL"
     },
     "useV2Account": false,
     "warnMsg": "WARNING !!!",

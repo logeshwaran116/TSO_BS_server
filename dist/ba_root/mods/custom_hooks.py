@@ -87,7 +87,7 @@ class modSetup(babase.Plugin):
         if (settings["useV2Account"]):
 
             if (plus.get_v1_account_state() ==
-                    'signed_in' and plus.get_v1_account_type() == 'V2'):
+                    'signed_in' and plus.get_v1_account_type() == 'V2'):    
                 logging.debug("Account V2 is active")
             else:
                 logging.warning("Account V2 login require ....stay tuned.")
@@ -104,9 +104,12 @@ class modSetup(babase.Plugin):
     def on_app_shutdown(self):
         print("Server shutting down , lets save cache")
         # lets try  threading here
-        # _thread.start_new_thread(pdata.dump_cache, ())
-        # _thread.start_new_thread(notification_manager.dump_cache, ())
-        # print("Done dumping memory")
+        try:
+            _thread.start_new_thread(pdata.dump_cache, ())
+            _thread.start_new_thread(notification_manager.dump_cache, ())
+            print("Done dumping memory")
+        except Exception:
+            logging.error("Error in saving cache", exc_info= True)
 
 
 def score_screen_on_begin(func) -> None:
@@ -412,37 +415,8 @@ def night_mode() -> None:
 
 
 def kick_vote_started(started_by: str, started_to: str) -> None:
-    """Logs the kick vote with full debug prints."""
-    print(f"[DEBUG] {started_by} started kick vote for {started_to}.")
-    try:
-        roles = pdata.get_roles()
-        print(f"[DEBUG] Roles fetched: {roles}")
-
-        immune_roles = ("protected", "owner", "moderator", "leadstaff")
-        print(f"[DEBUG] Immune roles list: {immune_roles}")
-
-        for role_name in immune_roles:
-            print(f"[DEBUG] Checking role: {role_name}")
-            if role_name in roles:
-                ids = roles[role_name].get("ids", [])
-                print(f"[DEBUG] Role '{role_name}' IDs: {ids}")
-                if started_to in ids:
-                    print(f"[DEBUG] {started_to} found in role '{role_name}' → immune")
-                    _bascenev1.set_enable_default_kick_voting(False)
-                    print("[DEBUG] Disabled default kick voting")
-
-                    import time
-                    time.sleep(30)  # synchronous sleep
-                    print("[DEBUG] Sleep finished (30s)")
-
-                    _bascenev1.set_enable_default_kick_voting(True)
-                    print("[DEBUG] Re-enabled default kick voting")
-                    break
-    except Exception as e:
-        import traceback
-        print(f"[DEBUG] Exception occurred: {e}")
-        traceback.print_exc()
-
+    """Logs the kick vote."""
+    logger.log(f"{started_by} started kick vote for {started_to}.")
 
 
 def on_kicked(account_id: str) -> None:
