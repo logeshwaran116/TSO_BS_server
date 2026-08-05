@@ -945,9 +945,8 @@ def dump_cache():
 #add coin to a account
 def add_coins(account_id, amount):
     custom = get_custom()
-    coins = custom.setdefault("coins",{})
-    if account_id not in coins:
-        account_id = int(amount)
+    coins:dict = custom.setdefault("coins",{})
+    coins.setdefault(account_id, 0)
     coins[account_id] += int(amount)
     if coins[account_id] < 0:
         coins[account_id] = 0
@@ -980,6 +979,8 @@ def reward_for_winning(session, winning_team):
 
     except Exception as e:
         print(f"Coin Reward Error: {e}")
+        import traceback
+        traceback.print_exc()
 
 def top_cashers(limit:int = 10):
     custom = get_custom()
