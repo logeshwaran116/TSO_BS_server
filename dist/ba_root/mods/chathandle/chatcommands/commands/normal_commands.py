@@ -527,7 +527,7 @@ def shop_command(arguments, account_id: str, clientid: int) -> None:
 
     if not arguments or arguments[0] in ['', None, 'list']:
         lines = [f"\ue048 {k}: {v}" for k, v in EFFECT_PRICES.items()]
-        msg = "\ue048 Shop (1-day items):\n" + "\n".join(lines)
+        msg = "\ue048 Shop (3-day items):\n" + "\n".join(lines)
         send(msg, clientid)
         return
     if arguments[0] == 'buy':
