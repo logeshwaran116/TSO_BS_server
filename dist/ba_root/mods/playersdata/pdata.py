@@ -946,10 +946,10 @@ def dump_cache():
 def add_coins(account_id, amount):
     custom = get_custom()
     coins:dict = custom.setdefault("coins",{})
-    coins.setdefault(account_id, 0)
-    coins[account_id] += int(amount)
-    if coins[account_id] < 0:
-        coins[account_id] = 0
+    p_coin = coins.setdefault(account_id, 0)
+    p_coin += int(amount)
+    if p_coin < 0:
+        p_coin = 0
     CacheData.custom = custom
     commit_c()
 
