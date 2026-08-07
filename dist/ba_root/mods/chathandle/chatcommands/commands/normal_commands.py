@@ -41,7 +41,7 @@ def ExcelCommand(command, arguments, clientid, accountid):
         fetch_send_stats(accountid, clientid)
 
     elif command in ['list', 'l']:
-        list(clientid)
+        list_show(clientid)
 
     elif command in ['uniqeid', 'id', 'pb-id', 'pb', 'accountid']:
         accountid_request(arguments, clientid, accountid)
@@ -178,30 +178,40 @@ def pingall(clientid):
     send(list, clientid)
 
 
-def list(clientid):
+def list_show(clientid):
     """Returns The List Of ALL Connected Players: PID, CID, Username, IGN"""
     try:
         p = u'{0:^6}{1:^12}{2:^18}{3:^18}'
         seprator = '\n' + ('-' * 90)
-
         listtext = [p.format('PID', 'CID', 'Username', 'IGN') + seprator]
 
-        roster = [ros for ros in bs.get_game_roster() if ros.get('client_id') != -1]
+        # 1. Fetch sessionplayers, PID = their position in this list.
+        session = bs.get_foreground_host_session()
+        sp_by_name_and_cid = {}
+        if session is not None:
+            for pid, sp in enumerate(session.sessionplayers):
+                try:
+                    name = sp.getname(icon=False)
+                    cid = sp.inputdevice.client_id
+                    sp_by_name_and_cid[(name, cid)] = pid
+                except Exception:
+                    continue
 
-        # Count total players across all rosters
-        total_players = sum(len(ros.get('players') or []) for ros in roster)
-        pid = total_players - 1   # start from max PID
+        # 2. Fetch roster, match each entry against sessionplayers by name + client_id.
+        for ros in bs.get_game_roster():
+            if ros.get('client_id') == -1:
+                continue  # skip the internal BCS server/host pseudo-account
 
-        for ros in roster:
             cid = ros.get('client_id', 'N/A')
             username = ros.get('display_string') or 'N/A'
-
             players = ros.get('players') or []
+
             if players:
                 for player in players:
-                    ign = player.get('name_full', 'N/A')
+                    ign = player.get('name') or 'N/A'
+                    # Match by (ign, cid) against sessionplayers' (name, client_id).
+                    pid = sp_by_name_and_cid.get((ign, cid), 'N/A')
                     listtext.append(p.format(pid, cid, username, ign))
-                    pid = max(pid - 1, 0)   # decrement but never below 0
             else:
                 listtext.append(p.format('N/A', cid, username, 'N/A'))
 
