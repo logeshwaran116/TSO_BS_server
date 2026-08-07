@@ -180,30 +180,35 @@ def pingall(clientid):
 
 def list(clientid):
     """Returns The List Of ALL Connected Players: PID, CID, Username, IGN"""
+    try:
+        p = u'{0:^6}{1:^12}{2:^18}{3:^18}'
+        seprator = '\n' + ('-' * 90)
 
-    p = u'{0:^6}{1:^12}{2:^18}{3:^18}'
-    seprator = '\n' + ('-' * 90)
+        listtext = [p.format('PID', 'CID', 'Username', 'IGN') + seprator]
 
-    listtext = [p.format('PID', 'CID', 'Username', 'IGN') + seprator]
+        roster = [ros for ros in bs.get_game_roster() if ros.get('client_id') != -1]
 
-    pid = 0
-    for ros in bs.get_game_roster():
-        if ros.get('client_id') == -1:
-            continue  # skip the internal BCS server/host pseudo-account
+        # Count total players across all rosters
+        total_players = sum(len(ros.get('players') or []) for ros in roster)
+        pid = total_players - 1   # start from max PID
 
-        cid = ros.get('client_id', 'N/A')
-        username = ros.get('display_string') or 'N/A'
+        for ros in roster:
+            cid = ros.get('client_id', 'N/A')
+            username = ros.get('display_string') or 'N/A'
 
-        players = ros.get('players') or []
-        if players:
-            for player in players:
-                ign = player.get('name_full', 'N/A')           
-                listtext.append(p.format(pid, cid, username, ign))
-                pid += 1
-        else:
-            listtext.append(p.format('N/A', cid, username, 'N/A'))
+            players = ros.get('players') or []
+            if players:
+                for player in players:
+                    ign = player.get('name_full', 'N/A')
+                    listtext.append(p.format(pid, cid, username, ign))
+                    pid = max(pid - 1, 0)   # decrement but never below 0
+            else:
+                listtext.append(p.format('N/A', cid, username, 'N/A'))
 
-    send("\n".join(listtext), clientid)
+        send("\n".join(listtext), clientid)
+    except Exception:
+        import traceback
+        traceback.print_exc()
 
 
 
