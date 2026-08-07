@@ -186,6 +186,7 @@ def list(clientid):
 
     listtext = [p.format('PID', 'CID', 'Username', 'IGN') + seprator]
 
+    pid = 0
     for ros in bs.get_game_roster():
         if ros.get('client_id') == -1:
             continue  # skip the internal BCS server/host pseudo-account
@@ -196,9 +197,9 @@ def list(clientid):
         players = ros.get('players') or []
         if players:
             for player in players:
-                ign = player.get('name_full', 'N/A')
-                id = player.get('id', 'N/A')              
-                listtext.append(p.format(id, cid, username, ign))
+                ign = player.get('name_full', 'N/A')           
+                listtext.append(p.format(pid, cid, username, ign))
+                pid += 1
         else:
             listtext.append(p.format('N/A', cid, username, 'N/A'))
 
