@@ -740,8 +740,6 @@ async def handle_serverchat_command(message, arguments):
     Usage from Discord 
     t?serverchat day/msg [count]
     
-    Example:
-    t?chatlist pb-id1 pb-id2 ... 100
     created by sanji"""
     server = babase.app.classic.server._config.party_name
     if not server:
@@ -786,12 +784,18 @@ async def handle_serverchat_command(message, arguments):
     # ── filter lines ──────────────────────────
  
     if arg in ('msg', 'msgs', 'message', 'messages'):
-        count = max(1, min(count, 2000))           # clamp 1–2000
-        selected = raw[-count * 2:]  # grab extra to account for host msgs being removed
-        selected = [l for l in selected if 'Host msg:' not in l or '[DC]' in l] # filter host msgs
-        selected = selected[-count:]  # trim back to requested count
+        count = max(1, min(count, 2000))  # clamp 1–2000
+        selected = []
+
+        for line in reversed(raw):
+            if 'Host msg:' not in line or '[DC]' in line:
+                selected.append(line)
+                if len(selected) == count:
+                    break
+
+        selected.reverse()  # restore chronological order (oldest-to-newest)
         lines = [_parse_log_line(l.rstrip('\n')) for l in selected if l.strip()]
-        title    = f"💬 Last {len(selected)} Messages of {server}"
+        title = f"💬 Last {len(selected)} Messages of {server}"
  
     else:  # day / days
         count    = max(1, min(count, 7))          # clamp 1–7
@@ -808,7 +812,7 @@ async def handle_serverchat_command(message, arguments):
                     selected.append(line)
             except (ValueError, IndexError):
                 selected.append(f"- {line}")              # keep lines we can't parse
-        lines = [_parse_log_line(l.rstrip('\n')) for l in selected if l.strip() and 'Host msg:' not in l or '[DC]' in l]
+        lines = [_parse_log_line(l.rstrip('\n')) for l in selected if l.strip() and ('Host msg:' not in l or '[DC]' in l)]
         title = f"💬 Chat from the Last {count} Day{'s' if count != 1 else ''} in {server}"
  
     if not selected:
@@ -879,13 +883,13 @@ async def handle_chatlist_command(message, arguments):
     lines = []
     msg_count = 0
 
-    for text in raw:
+    for text in reversed(raw):
         if any(pb in text for pb in arguments) and "Host msg" not in text:
             lines.append(_parse_log_line(text.rstrip('\n')))
             msg_count += 1
             if msg_count == count:
                 break
-
+    lines.reverse()  # restore chronological order (oldest-to-newest) for display
     title = f"💬 Last {len(lines)} Messages of {server} for pb-ids {', '.join(arguments)}"
 
     if not lines:
