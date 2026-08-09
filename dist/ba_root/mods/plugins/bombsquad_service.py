@@ -147,9 +147,30 @@ def get_roles():
     return pdata.get_roles()
 
 
+# Updated by Sanji both get_perks and update_perks
+# To handle also new animation id feature
+# Now in websiste u can add tag and animation id 
+# In the format of comma seperated yourtag,animid
+# Example: pb-id: SANJI, 10
 def get_perks():
     # TODO wire with spaz_effects to fetch list of effects.
-    return {"perks": pdata.get_custom_perks(),
+    perks = pdata.get_custom_perks()
+
+    #Converting datatype of tag to list to make in readable in website otherwise it will show [object]
+    ct_data:dict = perks.get('customtag',{})
+    ct_list = {}
+
+    for pb_id, tag_data in ct_data.items():
+        if isinstance(tag_data, dict): # dict form → convert to list           
+            ct_list[pb_id] = [tag_data.get('tag', 'N/A'), tag_data.get('anim_id', 1)]
+
+        elif isinstance(tag_data, list): # already list form → keep as is           
+            ct_list[pb_id] = tag_data
+
+        elif isinstance(tag_data, str): # str to list
+            ct_list[pb_id] = [p.strip() for p in tag_data.split(',')]
+
+    return {"perks": {**perks, "customtag": ct_list},
             "availableEffects": ["spark", "glow", "fairydust", "sparkground",
                                  "sweat", "sweatground", "distortion", "shine",
                                  "highlightshine", "scorch", "ice", "iceground",
@@ -158,8 +179,40 @@ def get_perks():
 
 def update_perks(custom):
     logger.log(f'updating custom perks, request from web')
-    pdata.update_custom_perks(custom)
+    try:
+        ct_list = custom.get('customtag',{})
+        ct_dict = {}
+        # The web api returns the data as a list and string
+        # ex: pb-1: "Tag,7" ot pb:2 = ['tag', 7]
+        # so we converting str to dict for our use case
+        for pb_id, value in ct_list.items():
+            if isinstance(value, str): 
+                parts = [v.strip() for v in value.split(',')]
+                if len(parts) == 1: #if only tag given saving with default anim id 1 
+                    ct_dict[pb_id] = {'tag':parts[0], 'anim_id': 1}
 
+                elif len(parts) >= 2:# if tag and anim id given saving it all
+                    try: #if anim id is not int save default anim id 1
+                        ct_dict[pb_id] = {'tag': parts[0], 'anim_id': int(parts[1])}
+                    except ValueError:
+                        ct_dict[pb_id] = {'tag': parts[0], 'anim_id': 1}
+
+            elif isinstance(value, list):
+            # List form [tag, anim_id]
+                if len(value) == 1:
+                    ct_dict[pb_id] = {'tag': value[0], 'anim_id': 1}
+                elif len(value) >= 2:
+                    try:
+                        ct_dict[pb_id] = {'tag': value[0], 'anim_id': int(value[1])}
+                    except ValueError:
+                        ct_dict[pb_id] = {'tag': value[0], 'anim_id': 1}
+
+        custom['customtag'] = ct_dict
+        pdata.update_custom_perks(custom)
+
+    except Exception:
+        import traceback
+        traceback.print_exc()
 
 def update_roles(roles):
     logger.log("updated roles from web")
