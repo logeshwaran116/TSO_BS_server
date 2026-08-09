@@ -900,6 +900,9 @@ async def handle_chatlist_command(message, arguments):
     view.message = sent
 
 async def handle_info_cmd(message, arguments:list[str]):
+    if not arguments:
+        await message.channel.send("Usage: t?info pb-id")
+        return
     if not arguments[0].startswith('pb'):
         await message.channel.send("Invalid pb-id")
         return
