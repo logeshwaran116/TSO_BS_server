@@ -68,7 +68,7 @@ class textonmap:
 
 
     def left_watermark(self):
-        text = u'\ue043 OWNER : SANJI\nManaged by: The Arcade'
+        text = u'\ue043 OWNER : SANJI\n\ue04b Managed by: The Arcade'
         node = bs.newnode('text',
                           attrs={
                               'text': text,
@@ -77,7 +77,7 @@ class textonmap:
                               'v_attach': 'bottom',
                               'h_attach': 'left',
                               'scale': 0.7,
-                              'position': (15, 30),
+                              'position': (15, 40),
                               'color': (1, 1, 1)
                           })
         bs.animate_array(
