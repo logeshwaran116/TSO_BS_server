@@ -68,7 +68,7 @@ class textonmap:
 
 
     def left_watermark(self):
-        text = u'\ue043 OWNER : SANJI'
+        text = u'\ue043 OWNER : SANJI\nManaged by: The Arcade'
         node = bs.newnode('text',
                           attrs={
                               'text': text,
@@ -204,7 +204,7 @@ class textonmap:
             pass
 
         def _random_color():
-            return (random.random(), random.random(), random.random())
+            return (random.random()*1.5, random.random()*1.5, random.random()*1.5)
 
         self._glow_nodes = []
         for i, ch in enumerate(tag_text):
