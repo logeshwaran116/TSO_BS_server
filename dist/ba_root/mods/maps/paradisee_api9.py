@@ -31,8 +31,8 @@ class Paradisee_defs():
 	points['powerup_spawn3'] = (-2.50, 2,-2.0)
 	points['powerup_spawn4'] = (2.50, 2, 2.0)
 	points['tnt1'] = (0,4,0)
-	points['spawn1'] = (-11.20, 1.50, 0)
-	points['spawn2'] = (11.20, 1.50, 0)
+	points['spawn1'] = (-11.20, 0, 0)
+	points['spawn2'] = (11.20, 0, 0)
    
 
 def barfs():
